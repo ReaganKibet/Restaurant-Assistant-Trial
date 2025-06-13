@@ -250,5 +250,31 @@
       "is_gluten_free": false,
       "is_dairy_free": false
     }
+    {
+  "id": "11",
+  "name": "Thai Green Curry",
+  "description": "A fragrant and spicy curry with coconut milk, green curry paste, chicken, and vegetables",
+  "price": 17.49,
+  "category": "main_course",
+  "cuisine_type": "Thai",
+  "ingredients": ["chicken", "green curry paste", "coconut milk", "bamboo shoots", "bell peppers", "basil", "fish sauce"],
+  "allergens": ["fish"],
+  "dietary_tags": ["high_protein"],
+  "spice_level": 4,
+  "preparation_time": 35,
+  "popularity_score": 8.6,
+  "available": true,
+  "nutritional_info": {
+    "calories": 540,
+    "protein": 40,
+    "carbs": 25,
+    "fat": 30
+  },
+  "is_vegetarian": false,
+  "is_vegan": false,
+  "is_gluten_free": true,
+  "is_dairy_free": true
+}
+
   ]
 }
