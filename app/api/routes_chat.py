@@ -14,10 +14,14 @@ from app.services.menu_service import MenuService
 
 router = APIRouter()
 
+# Create a single, shared instance
+llm_service = LLMService()
+menu_service = MenuService()
+conversation_manager = ConversationManager(llm_service, menu_service)
+
+
 # Dependency injection
 def get_conversation_manager():
-    llm_service = LLMService()
-    menu_service = MenuService()
     return ConversationManager(llm_service, menu_service)
 
 # Chat Request Schema
