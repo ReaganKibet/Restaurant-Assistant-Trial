@@ -84,7 +84,7 @@ class ConversationManager:
                 preferences=session["preferences"],
                 context=llm_response.get("context", {})
             )
-
+            logger.info(f"LLM response: {llm_response}") 
         # Check for allergies if meals are suggested
         if suggested_meals:
             suggested_meals = await self.allergy_checker.filter_allergens(
