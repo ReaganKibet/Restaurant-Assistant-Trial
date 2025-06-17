@@ -42,21 +42,37 @@ class AllergyChecker:
         ingredient = ingredient.lower()
 
         for allergy in allergies:
-            allergy = allergy.lower()
+            allergy_norm = allergy.lower()
+            ingredient_norm = ingredient.lower()
             # Check for direct match
-            if allergy in ingredient:
+            if allergy_norm in ingredient_norm:
                 found_allergens.append({
-                    "allergen": allergy,
-                    "severity": self._get_allergen_severity(allergy),
+                    "allergen": allergy_norm,
+                    "severity": self._get_allergen_severity(allergy_norm),
                     "match_type": "direct"
                 })
-            # Check for common variations
-            elif any(variation in ingredient for variation in self._get_allergen_variations(allergy)):
-                found_allergens.append({
-                    "allergen": allergy,
-                    "severity": self._get_allergen_severity(allergy),
-                    "match_type": "variation"
-                })
+                continue
+
+            # Synonym match
+            synonyms = self.allergen_synonyms.get(allergy_norm, [])
+            for synonym in synonyms:
+                if synonym in ingredient_norm:
+                    found_allergens.append({
+                        "allergen": allergy_norm,
+                        "severity": self._get_allergen_severity(allergy_norm),
+                        "match_type": "synonym"
+                    })
+                    break
+
+            # Variation match
+            for variation in self._get_allergen_variations(allergy_norm):
+                if variation in ingredient_norm:
+                    found_allergens.append({
+                        "allergen": allergy_norm,
+                        "severity": self._get_allergen_severity(allergy_norm),
+                        "match_type": "variation"
+                    })
+                    break
 
         return found_allergens
 
