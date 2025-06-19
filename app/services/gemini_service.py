@@ -1,6 +1,6 @@
 import google.generativeai as genai
 from typing import Optional
-from ..core.config import settings
+from app.config import settings
 from loguru import logger
 
 class GeminiService:
