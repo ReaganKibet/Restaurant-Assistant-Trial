@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 from pydantic import BaseModel
 from loguru import logger
+import time
 
 from app.models.schemas import (
     ConversationRequest, StartConversationRequest, 
@@ -12,7 +13,7 @@ from app.core.conversation_manager import ConversationManager
 from app.services.llm_service import LLMService
 from app.services.menu_service import MenuService
 
-router = APIRouter()
+router = APIRouter(prefix="/chat", tags=["chat"])
 
 # Create a single, shared instance
 llm_service = LLMService()
@@ -23,6 +24,9 @@ conversation_manager = ConversationManager(llm_service, menu_service)
 # Dependency injection
 def get_conversation_manager():
     return ConversationManager(llm_service, menu_service)
+
+def get_llm_service():
+    return LLMService()
 
 # Chat Request Schema
 class ChatRequest(BaseModel):
@@ -101,7 +105,36 @@ async def end_conversation(
         logger.error(f"End error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to end conversation")
 
+@router.post("/", response_model=ChatResponse)
+async def chat(
+    request: ChatRequest,
+    llm_service: LLMService = Depends(get_llm_service)
+):
+    start_time = time.time()
+    
+    try:
+        # Try Gemini first, fallback to Ollama if needed
+        result = await llm_service.generate_response(
+            prompt=request.message,
+            context=request.context,
+            use_fallback=True  # Always allow fallback
+        )
+        
+        processing_time = time.time() - start_time
+        
+        return ChatResponse(
+            response=result["response"],
+            provider=result["provider"],  # "gemini" or "ollama"
+            success=result["success"],
+            fallback_used=result.get("fallback_used", False),
+            processing_time=processing_time
+        )
+        
+    except Exception as e:
+        logger.error(f"Chat endpoint error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "service": "chat"}
+    return {"status": "healthy", "service": "chat", "providers": ["gemini", "ollama"]}
