@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     # Primary LLM - Gemini API Configuration
     gemini_api_key: str = os.getenv("GEMINI_API_KEY")
-    gemini_model: str = "gemini-pro"
+    gemini_model: str = "gemini-1.5-flash"
     
     # Fallback LLM - Ollama Configuration
     MODEL_NAME: str = "llama2"  # For backward compatibility
