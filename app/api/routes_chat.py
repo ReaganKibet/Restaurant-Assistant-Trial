@@ -3,6 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 from loguru import logger
 import time
+import os
 
 from app.models.schemas import (
     ConversationRequest, StartConversationRequest, 
@@ -34,6 +35,19 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     preferences: Optional[UserPreferences] = None
 
+LOGS_DIR = r"C:\Users\Elitebook\OneDrive\Documents\PROJECTS\Restaurant Assistant Trial 4\logs"
+SESSIONS_LOG_FILE = os.path.join(LOGS_DIR, "active_sessions.log")
+
+def log_active_sessions(session_ids):
+    """Write all active session IDs to the sessions log file."""
+    try:
+        os.makedirs(LOGS_DIR, exist_ok=True)
+        with open(SESSIONS_LOG_FILE, "w") as f:
+            for sid in session_ids:
+                f.write(f"{sid}\n")
+    except Exception as e:
+        logger.error(f"Failed to write active sessions log: {e}")
+
 @router.post("/start", response_model=ChatResponse)
 async def start_conversation(
     preferences: Optional[UserPreferences] = None,
@@ -43,6 +57,10 @@ async def start_conversation(
     try:
         response = await conv_manager.start_conversation(preferences=preferences)
         logger.info(f"Started new session: {response.session_id}")
+        # Log all active session IDs for debugging
+        session_ids = list(conv_manager.sessions.keys())
+        logger.debug(f"All active sessions: {session_ids}")
+        log_active_sessions(session_ids)
         return response
     except Exception as e:
         logger.error(f"Start error: {str(e)}")
@@ -57,6 +75,10 @@ async def send_message(
     try:
         if not request.session_id:
             raise HTTPException(status_code=400, detail="Session ID is required")
+        # Log all active session IDs for debugging
+        session_ids = list(conv_manager.sessions.keys())
+        logger.debug(f"All active sessions before processing: {session_ids}")
+        log_active_sessions(session_ids)
 
         response = await conv_manager.process_message(
             message=request.message,
