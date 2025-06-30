@@ -20,6 +20,11 @@ class ConversationManager:
         self.allergy_checker = AllergyChecker()
         self.active_sessions: Dict[str, Dict[str, Any]] = {}
 
+    @property
+    def sessions(self):
+        # Expose sessions for logging/debugging
+        return self.active_sessions
+
     async def start_conversation(
         self,
         preferences: Optional[UserPreferences] = None
@@ -140,3 +145,16 @@ class ConversationManager:
         
         # Remove session
         del self.active_sessions[session_id]
+
+# Create a singleton instance for dependency injection
+conversation_manager_instance = None
+
+def get_conversation_manager():
+    global conversation_manager_instance
+    if conversation_manager_instance is None:
+        # You may need to pass actual service instances here
+        conversation_manager_instance = ConversationManager(
+            llm_service=LLMService(),
+            menu_service=MenuService()
+        )
+    return conversation_manager_instance
