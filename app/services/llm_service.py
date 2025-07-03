@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Optional
 import json
 import asyncio
 import time
+import re
 from enum import Enum
 from dataclasses import dataclass
 from loguru import logger
@@ -10,6 +11,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from app.config import settings
 from app.models.schemas import ChatMessage, UserPreferences
+from app.services.gemini_service import clean_llm_json
 
 class LLMProvider(Enum):
     GEMINI = "gemini"
@@ -247,7 +249,8 @@ Response:"""
         try:
             result = await self.generate_response(prompt)
             response_text = result["response"]
-            
+            # Clean the LLM response before parsing
+            response_text = clean_llm_json(response_text)
             try:
                 parsed_response = json.loads(response_text)
                 # Add provider metadata
@@ -306,7 +309,8 @@ Response:"""
         try:
             result = await self.generate_response(prompt)
             response_text = result["response"]
-            
+            # Clean the LLM response before parsing
+            response_text = clean_llm_json(response_text)
             try:
                 return json.loads(response_text)
             except json.JSONDecodeError:
@@ -372,3 +376,7 @@ Response:"""
             "ollama_healthy": self.ollama_healthy,
             "last_health_check": self.last_health_check
         }
+
+    def clean_llm_json(text: str) -> str:
+        # Remove code block markers and language tags
+        return re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip(), flags=re.MULTILINE)

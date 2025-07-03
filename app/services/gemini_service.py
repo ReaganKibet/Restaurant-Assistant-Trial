@@ -2,6 +2,7 @@ import google.generativeai as genai
 from typing import Optional
 from app.config import settings
 from loguru import logger
+import re
 
 class GeminiService:
     def __init__(self):
@@ -25,3 +26,7 @@ class GeminiService:
         except Exception as e:
             logger.error(f"Gemini generation failed: {e}")
             raise
+
+def clean_llm_json(text: str) -> str:
+    # Remove code block markers and language tags
+    return re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip(), flags=re.MULTILINE)

@@ -146,15 +146,13 @@ class ConversationManager:
         # Remove session
         del self.active_sessions[session_id]
 
-# Create a singleton instance for dependency injection
-conversation_manager_instance = None
+# Create service instances ONCE at module level
+llm_service_instance = LLMService()
+menu_service_instance = MenuService()
+conversation_manager_instance = ConversationManager(
+    llm_service=llm_service_instance,
+    menu_service=menu_service_instance
+)
 
 def get_conversation_manager():
-    global conversation_manager_instance
-    if conversation_manager_instance is None:
-        # You may need to pass actual service instances here
-        conversation_manager_instance = ConversationManager(
-            llm_service=LLMService(),
-            menu_service=MenuService()
-        )
     return conversation_manager_instance

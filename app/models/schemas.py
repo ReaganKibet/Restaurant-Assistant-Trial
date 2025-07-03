@@ -98,5 +98,6 @@ class StartConversationRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    session_id: Optional[str] = None
-    preferences: Optional[UserPreferences] = None
+    session_id: str
+    preferences: Dict[str, Any]
+    context: Optional[List[Dict[str, Any]]] = None  # <-- Add this line if you need context

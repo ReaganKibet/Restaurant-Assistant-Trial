@@ -24,7 +24,7 @@ conversation_manager = ConversationManager(llm_service, menu_service)
 
 # Dependency injection
 def get_conversation_manager():
-    return ConversationManager(llm_service, menu_service)
+    return conversation_manager  # <-- GOOD: always the same instance!
 
 def get_llm_service():
     return LLMService()
