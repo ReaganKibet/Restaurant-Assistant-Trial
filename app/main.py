@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 import uvicorn
 from contextlib import asynccontextmanager
+from fastapi.staticfiles import StaticFiles
 
 from app.api import routes_chat, routes_meals, routes_admin
 from app.core.conversation_manager import ConversationManager
@@ -77,6 +78,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include routers
 app.include_router(routes_chat.router, prefix="/api/chat", tags=["chat"])
