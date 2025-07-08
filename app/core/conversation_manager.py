@@ -25,6 +25,18 @@ class ConversationManager:
         # Expose sessions for logging/debugging
         return self.active_sessions
 
+    async def _update_filtered_meals(self, session):
+        preferences = session["preferences"]
+        if preferences_are_sufficient(preferences):
+            filtered_meals = await self.meal_selector.get_recommendations(preferences)
+            if preferences.allergies:
+                filtered_meals = await self.allergy_checker.filter_allergens(
+                    meals=filtered_meals, allergies=preferences.allergies
+                )
+            session["filtered_meals"] = filtered_meals
+        else:
+            session["filtered_meals"] = []
+
     async def start_conversation(
         self,
         preferences: Optional[UserPreferences] = None
@@ -38,6 +50,22 @@ class ConversationManager:
             "preferences": preferences or UserPreferences(),
             "start_time": datetime.utcnow()
         }
+
+        session = self.active_sessions[session_id]
+        await self._update_filtered_meals(session)
+        if session["filtered_meals"]:
+            meal = session["filtered_meals"][0].meal
+            response_message = (
+                f"I recommend the {meal.name}: {meal.description} (${meal.price}). "
+                "Would you like to order this or hear more options?"
+            )
+            return ChatResponse(
+                message=response_message,
+                session_id=session_id,
+                suggested_meals=session["filtered_meals"],
+                follow_up_questions=[],
+                metadata=None
+            )
 
         # Generate welcome message
         welcome_message = await self.llm_service.generate_welcome_message(
@@ -69,13 +97,28 @@ class ConversationManager:
         # Update preferences if provided
         if preferences:
             session["preferences"] = preferences
-
+            await self._update_filtered_meals(session)
         # Add user message to history
         session["messages"].append(
             ChatMessage(role="user", content=message)
         )
 
-        # Process message with LLM
+        # Recommend immediately if filtered meals exist
+        if session.get("filtered_meals"):
+            meal = session["filtered_meals"][0].meal
+            response_message = (
+                f"I recommend the {meal.name}: {meal.description} (${meal.price}). "
+                "Would you like to order this or hear more options?"
+            )
+            return ChatResponse(
+                message=response_message,
+                session_id=session_id,
+                suggested_meals=session["filtered_meals"],
+                follow_up_questions=[],
+                metadata=None
+            )
+
+        # --- OTHERWISE, USE LLM FOR NEXT STEP ---
         llm_response = await self.llm_service.process_message(
             message=message,
             context=session["messages"],
@@ -145,6 +188,16 @@ class ConversationManager:
         
         # Remove session
         del self.active_sessions[session_id]
+
+def preferences_are_sufficient(preferences: UserPreferences) -> bool:
+    # Adjust these checks as needed for your use case
+    return (
+        bool(preferences.dietary_restrictions) and
+        bool(preferences.favorite_cuisines) and
+        preferences.price_range is not None and
+        preferences.price_range[0] is not None and
+        preferences.price_range[1] is not None
+    )
 
 # Create service instances ONCE at module level
 llm_service_instance = LLMService()
