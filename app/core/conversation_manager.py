@@ -57,13 +57,14 @@ class ConversationManager:
             meal = session["filtered_meals"][0].meal
             response_message = (
                 f"I recommend the {meal.name}: {meal.description} (${meal.price}). "
-                "Would you like to order this or hear more options?"
+                "Would you like to order this, add it to your order, or see more options? "
+                "Just reply 'order' to confirm, or let me know if you want something else."
             )
             return ChatResponse(
                 message=response_message,
                 session_id=session_id,
                 suggested_meals=session["filtered_meals"],
-                follow_up_questions=[],
+                follow_up_questions=["Would you like to order this meal, add a side, or see more options?"],
                 metadata=None
             )
 
@@ -108,13 +109,14 @@ class ConversationManager:
             meal = session["filtered_meals"][0].meal
             response_message = (
                 f"I recommend the {meal.name}: {meal.description} (${meal.price}). "
-                "Would you like to order this or hear more options?"
+                "Would you like to order this, add it to your order, or see more options? "
+                "Just reply 'order' to confirm, or let me know if you want something else."
             )
             return ChatResponse(
                 message=response_message,
                 session_id=session_id,
                 suggested_meals=session["filtered_meals"],
-                follow_up_questions=[],
+                follow_up_questions=["Would you like to order this meal, add a side, or see more options?"],
                 metadata=None
             )
 
@@ -190,14 +192,24 @@ class ConversationManager:
         del self.active_sessions[session_id]
 
 def preferences_are_sufficient(preferences: UserPreferences) -> bool:
-    # Adjust these checks as needed for your use case
-    return (
-        bool(preferences.dietary_restrictions) and
-        bool(preferences.favorite_cuisines) and
-        preferences.price_range is not None and
-        preferences.price_range[0] is not None and
-        preferences.price_range[1] is not None
-    )
+    """
+    Return True if three or more distinct preference categories are set.
+    Categories: dietary_restrictions, favorite_cuisines, price_range, allergies, spice_preference, dislikes
+    """
+    count = 0
+    if preferences.dietary_restrictions:
+        count += 1
+    if preferences.favorite_cuisines:
+        count += 1
+    if preferences.price_range and preferences.price_range[0] is not None and preferences.price_range[1] is not None:
+        count += 1
+    if preferences.allergies:
+        count += 1
+    if preferences.spice_preference is not None:
+        count += 1
+    if preferences.dislikes:
+        count += 1
+    return count >= 3
 
 # Create service instances ONCE at module level
 llm_service_instance = LLMService()
