@@ -164,14 +164,14 @@ class MealSelector:
             for item, score in scored_items[:limit]:
                 # Get alternatives (next best items)
                 alternatives = [
-                    MenuItem(**alt_item)
+                    alt_item if isinstance(alt_item, MenuItem) else MenuItem(**alt_item)
                     for alt_item, alt_score in scored_items[limit:limit+2]
                 ]
 
                 recommendation = MealRecommendation(
                     meal=item,
                     confidence_score=score,
-                    reasoning=self._generate_recommendation_reasoning(
+                    reasoning=self._generate_recommendation_reasons(
                         item, preferences, score
                     ),
                     alternatives=alternatives
