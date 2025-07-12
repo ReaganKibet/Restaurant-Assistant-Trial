@@ -63,7 +63,7 @@ class ConversationManager:
             return ChatResponse(
                 message=response_message,
                 session_id=session_id,
-                suggested_meals=session["filtered_meals"],
+                suggested_meals=[rec.meal for rec in session["filtered_meals"]],
                 follow_up_questions=["Would you like to order this meal, add a side, or see more options?"],
                 metadata=None
             )
@@ -104,9 +104,68 @@ class ConversationManager:
             ChatMessage(role="user", content=message)
         )
 
+        # Track which recommendation index has been shown
+        if "shown_index" not in session:
+            session["shown_index"] = 0
+
+        filtered_meals = session.get("filtered_meals", [])
+        current_meal = filtered_meals[session["shown_index"]].meal if filtered_meals else None
+
+        # Detect out-of-place or more info questions
+        more_info_phrases = ["more about", "information", "details", "tell me more", "what else", "nutritional", "describe", "explain", "recommend side", "side dish"]
+        if any(phrase in message.lower() for phrase in more_info_phrases):
+            # Build full meal context
+            if current_meal:
+                nutri = current_meal.nutritional_info or {}
+                meal_context = (
+                    f"Name: {current_meal.name}\n"
+                    f"Description: {current_meal.description}\n"
+                    f"Ingredients: {', '.join(current_meal.ingredients) if current_meal.ingredients else 'N/A'}\n"
+                    f"Cuisine: {getattr(current_meal.cuisine_type, 'value', str(current_meal.cuisine_type))}\n"
+                    f"Nutritional Info: Calories: {nutri.get('calories', 'N/A')}, Protein: {nutri.get('protein', 'N/A')}g, Carbs: {nutri.get('carbs', 'N/A')}g, Fat: {nutri.get('fat', 'N/A')}g.\n"
+                )
+            else:
+                meal_context = "No meal details available."
+            ai_response = await self.llm_service.generate_response(
+                prompt=f"{message}\nHere are the meal details:\n{meal_context}",
+                context=session["messages"]
+            )
+            return ChatResponse(
+                message=ai_response["response"] if isinstance(ai_response, dict) else str(ai_response),
+                session_id=session_id,
+                suggested_meals=[rec.meal for rec in filtered_meals],
+                follow_up_questions=["Would you like to order this meal, add a side, or see more options?"],
+                metadata=None
+            )
+
+        # If user asks for more options
+        more_options_phrases = ["more options", "see more options", "next", "another", "show me more"]
+        if any(phrase in message.lower() for phrase in more_options_phrases):
+            session["shown_index"] += 1
+            if session["shown_index"] < len(filtered_meals):
+                meal = filtered_meals[session["shown_index"]].meal
+                response_message = (
+                    f"How about {meal.name}: {meal.description} (${meal.price})? "
+                    "Would you like to order this, add it to your order, or see more options? "
+                    "Just reply 'order' to confirm, or let me know if you want something else."
+                )
+                follow_up = ["Would you like to order this meal, add a side, or see more options?"]
+            else:
+                response_message = (
+                    "I've shown you all the best matches. Would you like to adjust your preferences or try a different cuisine?"
+                )
+                follow_up = ["Would you like to change your preferences or try a different cuisine?"]
+            return ChatResponse(
+                message=response_message,
+                session_id=session_id,
+                suggested_meals=[rec.meal for rec in filtered_meals],
+                follow_up_questions=follow_up,
+                metadata=None
+            )
+
         # Recommend immediately if filtered meals exist
-        if session.get("filtered_meals"):
-            meal = session["filtered_meals"][0].meal
+        if filtered_meals:
+            meal = filtered_meals[session["shown_index"]].meal
             response_message = (
                 f"I recommend the {meal.name}: {meal.description} (${meal.price}). "
                 "Would you like to order this, add it to your order, or see more options? "
@@ -115,7 +174,7 @@ class ConversationManager:
             return ChatResponse(
                 message=response_message,
                 session_id=session_id,
-                suggested_meals=session["filtered_meals"],
+                suggested_meals=[rec.meal for rec in filtered_meals],
                 follow_up_questions=["Would you like to order this meal, add a side, or see more options?"],
                 metadata=None
             )
@@ -190,6 +249,57 @@ class ConversationManager:
         
         # Remove session
         del self.active_sessions[session_id]
+
+    def format_menu_recommendation(self, meal: MenuItem) -> str:
+        """Format a menu recommendation in Markdown."""
+        return f"""
+### {meal.name}
+- **Cuisine:** {meal.cuisine_type.value}
+- **Price:** ${meal.price:.2f}
+- **Spice Level:** {meal.spice_level}
+- **Ingredients:** {', '.join(meal.ingredients)}
+- **Dietary Restrictions:** {', '.join(meal.dietary_restrictions) if meal.dietary_restrictions else 'None'}
+- **Description:** {meal.description}
+"""
+
+    def format_suggestions(self, meals: List[MenuItem]) -> str:
+        """Format a list of menu suggestions in Markdown."""
+        if not meals:
+            return "Sorry, no meals match your preferences."
+        return '\n'.join([self.format_menu_recommendation(meal) for meal in meals])
+
+    def format_llm_response(self, llm_text: str) -> str:
+        """Wrap LLM output in Markdown if needed."""
+        return llm_text.strip()  # LLM already instructed to reply in Markdown
+
+    def get_chat_response(self, user_query: str, session: dict) -> ChatResponse:
+        # Determine if the query is about menu recommendations
+        menu_query = session.get("menu_query", False)
+        more_info_query = session.get("more_info_query", False)
+        suggested_meals = session.get("filtered_meals", [])
+        selected_meal = session.get("selected_meal")
+
+        if menu_query and suggested_meals:
+            markdown_reply = self.format_suggestions([rec.meal for rec in suggested_meals])
+        elif more_info_query and selected_meal:
+            markdown_reply = self.format_menu_recommendation(selected_meal)
+        else:
+            # LLM fallback for out-of-scope questions
+            meal_context = self.format_menu_recommendation(selected_meal) if selected_meal else ""
+            llm_prompt = f"""
+You are a helpful restaurant assistant. Answer the user's question using the following meal context. Reply in Markdown format for clarity.
+
+Meal details:
+{meal_context}
+
+User question: {user_query}
+"""
+            llm_text = self.llm_service.ask(llm_prompt)
+            markdown_reply = self.format_llm_response(llm_text)
+        return ChatResponse(
+            reply=markdown_reply,
+            # ...existing code...
+        )
 
 def preferences_are_sufficient(preferences: UserPreferences) -> bool:
     """
