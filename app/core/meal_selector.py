@@ -9,28 +9,19 @@ class MealSelector:
     def __init__(self, menu_service: MenuService):
         self.menu_service = menu_service
 
+    def _matches_allergies(self, item: MenuItem, allergies: List[str]) -> bool:
+        # Return True if item contains any of the user's allergies
+        return any(allergen in item.allergens for allergen in allergies)
+
     def _calculate_preference_score(
         self,
         item: MenuItem,
         preferences: UserPreferences
     ) -> float:
-        """Calculate how well a menu item matches user preferences"""
         score = 0.0
         max_score = 0.0
 
-        # Price range matching (30% weight)
-        if preferences.price_range:
-            min_price, max_price = preferences.price_range
-            if min_price <= item.price <= max_price:
-                price_score = 1.0
-            else:
-                # Penalize items outside price range
-                price_diff = min(abs(item.price - min_price), abs(item.price - max_price))
-                price_score = max(0, 1 - (price_diff / max_price))
-            score += price_score * 0.3
-            max_score += 0.3
-
-        # Dietary restrictions (25% weight)
+        # Dietary restrictions (30%)
         if preferences.dietary_restrictions:
             dietary_score = 0.0
             for restriction in preferences.dietary_restrictions:
@@ -42,45 +33,33 @@ class MealSelector:
                     dietary_score += 1
                 elif restriction == "dairy_free" and item.is_dairy_free:
                     dietary_score += 1
-            score += (dietary_score / len(preferences.dietary_restrictions)) * 0.25
+            score += (dietary_score / len(preferences.dietary_restrictions)) * 0.3
+            max_score += 0.3
+
+        # Price range (25%)
+        if preferences.price_range:
+            min_price, max_price = preferences.price_range
+            if min_price <= item.price <= max_price:
+                score += 0.25
             max_score += 0.25
 
-        # Spice level matching (15% weight)
-        if preferences.spice_preference:
+        # Cuisine type (20%)
+        if preferences.favorite_cuisines:
+            if item.cuisine_type.value in [c.lower() for c in preferences.favorite_cuisines]:
+                score += 0.2
+            max_score += 0.2
+
+        # Spice level (15%)
+        if preferences.spice_preference is not None:
             spice_diff = abs(item.spice_level - preferences.spice_preference)
-            spice_score = max(0, 1 - (spice_diff / 5))  # 5 is max spice level
+            spice_score = max(0, 1 - (spice_diff / 5))
             score += spice_score * 0.15
             max_score += 0.15
 
-        # Cuisine preferences (20% weight)
-        if preferences.favorite_cuisines:
-            cuisine_score = 0.0
-            for cuisine in preferences.favorite_cuisines:
-                if cuisine.lower() in item.description.lower():
-                    cuisine_score += 1
-            score += (cuisine_score / len(preferences.favorite_cuisines)) * 0.2
-            max_score += 0.2
+        # Allergies (exclude if any match)
+        if preferences.allergies and self._matches_allergies(item, preferences.allergies):
+            return 0.0  # Exclude this meal
 
-        # Disliked ingredients (10% weight)
-        if preferences.disliked_ingredients:
-            disliked_score = 1.0
-            for ingredient in preferences.disliked_ingredients:
-                if ingredient.lower() in [i.lower() for i in item.ingredients]:
-                    disliked_score = 0.0
-                    break
-            score += disliked_score * 0.1
-            max_score += 0.1
-
-        # Avoid disliked items (penalty)
-        if preferences.dislikes:
-            for dislike in preferences.dislikes:
-                if (dislike.lower() in item.name.lower() or 
-                    dislike.lower() in item.description.lower() or
-                    any(dislike.lower() in ingredient.lower() for ingredient in item.ingredients)):
-                    score *= 0.5  # 50% penalty for disliked items
-
-
-        # Normalize score
         return score / max_score if max_score > 0 else 0
 
     def _generate_recommendation_reasons(
