@@ -24,6 +24,24 @@ class MealCategory(str, Enum):
     BEVERAGE = "beverage"
     SIDE_DISH = "side_dish"
 
+class CuisineType(str, Enum):
+    ITALIAN = "italian"
+    MEXICAN = "mexican"
+    JAPANESE = "japanese"
+    CHINESE = "chinese"
+    SWAHILI = "swahili"
+    INDIAN = "indian"
+    FRENCH = "french"
+    AMERICAN = "american"
+    MEDITERRANEAN = "mediterranean"
+    THAI = "thai"
+    KOREAN = "korean"
+    GREEK = "greek"
+    SPANISH = "spanish"
+    LEBANESE = "lebanese"
+    TURKISH = "turkish"
+    OTHER = "other"
+
 class UserPreferences(BaseModel):
     dietary_restrictions: List[DietaryRestriction] = []
     allergies: List[str] = []
@@ -41,6 +59,7 @@ class MenuItem(BaseModel):
     description: str
     price: float
     category: MealCategory
+    cuisine_type: CuisineType  # Added cuisine type as Enum
     ingredients: List[str]
     allergens: List[str]
     nutritional_info: Dict[str, Any]
@@ -74,6 +93,10 @@ class MealRecommendation(BaseModel):
     reasoning: str
     nutritional_info: Optional[Dict[str, Any]] = None
     alternatives: List[MenuItem]
+
+    @property
+    def ingredients(self):
+        return self.meal.ingredients
 
 class OrderRequest(BaseModel):
     meal_ids: List[str]
