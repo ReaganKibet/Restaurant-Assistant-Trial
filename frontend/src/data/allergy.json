@@ -1,0 +1,100 @@
+{
+  "common_allergens": [
+    "dairy",
+    "eggs", 
+    "fish",
+    "shellfish",
+    "tree nuts",
+    "peanuts",
+    "wheat",
+    "gluten",
+    "soy",
+    "sesame"
+  ],
+  "allergen_groups": {
+    "dairy": [
+      "milk",
+      "cheese", 
+      "butter",
+      "cream",
+      "yogurt",
+      "lactose",
+      "whey",
+      "casein"
+    ],
+    "gluten": [
+      "wheat",
+      "barley", 
+      "rye",
+      "oats",
+      "flour",
+      "bread",
+      "pasta"
+    ],
+    "tree nuts": [
+      "almonds",
+      "walnuts",
+      "pecans", 
+      "cashews",
+      "pistachios",
+      "hazelnuts",
+      "brazil nuts",
+      "macadamia nuts"
+    ],
+    "peanuts": [
+      "groundnuts",
+      "peanut butter",
+      "peanut oil"
+    ],
+    "shellfish": [
+      "crab",
+      "lobster",
+      "shrimp", 
+      "prawns",
+      "mussels",
+      "clams",
+      "oysters",
+      "scallops"
+    ],
+    "fish": [
+      "salmon",
+      "tuna",
+      "cod",
+      "mackerel",
+      "sardines",
+      "anchovies",
+      "fish sauce"
+    ],
+    "eggs": [
+      "egg",
+      "albumen",
+      "egg whites",
+      "egg yolks",
+      "mayonnaise"
+    ],
+    "soy": [
+      "soya",
+      "soybeans",
+      "tofu",
+      "tempeh",
+      "soy sauce",
+      "miso",
+      "edamame"
+    ],
+    "sesame": [
+      "sesame seeds",
+      "tahini",
+      "sesame oil"
+    ]
+  },
+  "severity_levels": {
+    "mild": ["digestive discomfort", "bloating"],
+    "moderate": ["hives", "nausea", "vomiting"],
+    "severe": ["anaphylaxis", "difficulty breathing", "swelling"]
+  },
+  "cross_contamination_risks": {
+    "high_risk": ["peanuts", "tree nuts", "shellfish"],
+    "medium_risk": ["gluten", "dairy", "soy"],
+    "low_risk": ["eggs", "fish", "sesame"]
+  }
+}
