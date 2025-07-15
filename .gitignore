@@ -1,7 +1,9 @@
 # Python
 __pycache__/
 *.py[cod]
-*.env
+*.env.local
+*.env.production
+
 *.sqlite3
 *.log
 

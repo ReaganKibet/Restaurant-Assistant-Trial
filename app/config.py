@@ -3,7 +3,10 @@ from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 
-load_dotenv()  # Loads variables from .env
+# Decide which .env file to load
+env = os.getenv("ENV", "local")
+env_file = ".env.production" if env == "production" else ".env.local"
+load_dotenv(env_file)
 
 class Settings(BaseSettings):
     # App settings

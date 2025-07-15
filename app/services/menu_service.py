@@ -2,34 +2,41 @@ from typing import List, Dict, Any, Optional
 import json
 from loguru import logger
 from datetime import datetime
+import os
 
 from app.config import settings
 from app.models.schemas import MenuItem, MealCategory
 
+# Add Supabase import
+USE_SUPABASE = getattr(settings, "USE_SUPABASE", False)
+if USE_SUPABASE:
+    from supabase import create_client, Client
+    SUPABASE_URL = settings.SUPABASE_URL
+    SUPABASE_KEY = settings.SUPABASE_KEY
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 class MenuService:
     def __init__(self):
-        # Use correct settings attribute names
         self.menu_data_path = settings.MENU_DATA_PATH
         self.allergens_data_path = settings.ALLERGENS_DATA_PATH
         self.ingredients_data_path = settings.INGREDIENTS_DATA_PATH
 
-        # Load data and assign to instance variables
-        self.menu_data = self._load_menu_data()
-        self.allergens_data = self._load_allergens_data()
-        self.ingredients_data = self._load_ingredients_data()
+        # Load data based on config
+        if USE_SUPABASE:
+            self.menu_data = self._load_menu_data_supabase()
+            self.allergens_data = self._load_allergens_data_supabase()
+            self.ingredients_data = self._load_ingredients_data_supabase()
+        else:
+            self.menu_data = self._load_menu_data()
+            self.allergens_data = self._load_allergens_data()
+            self.ingredients_data = self._load_ingredients_data()
 
-        # Create menu_items list from loaded menu_data
         self.menu_items = [MenuItem(**item) for item in self.menu_data.get("items", [])]
-
-        # Call the correct data loading methods, or implement _load_data if needed
-        self._load_menu_data()
-        self._load_allergens_data()
-        self._load_ingredients_data()
 
     def _load_menu_data(self) -> Dict[str, Any]:
         """Load menu data from JSON file"""
         try:
-            with open(settings.MENU_DATA_PATH, 'r') as f:
+            with open(self.menu_data_path, 'r') as f:
                 return json.load(f)
         except Exception as e:
             logger.error(f"Error loading menu data: {str(e)}")
@@ -38,7 +45,7 @@ class MenuService:
     def _load_allergens_data(self) -> Dict[str, Any]:
         """Load allergens data from JSON file"""
         try:
-            with open(settings.ALLERGENS_DATA_PATH, 'r') as f:
+            with open(self.allergens_data_path, 'r') as f:
                 return json.load(f)
         except Exception as e:
             logger.error(f"Error loading allergens data: {str(e)}")
@@ -47,10 +54,43 @@ class MenuService:
     def _load_ingredients_data(self) -> Dict[str, Any]:
         """Load ingredients data from JSON file"""
         try:
-            with open(settings.INGREDIENTS_DATA_PATH, 'r') as f:
+            with open(self.ingredients_data_path, 'r') as f:
                 return json.load(f)
         except Exception as e:
             logger.error(f"Error loading ingredients data: {str(e)}")
+            return {"ingredients": []}
+
+    # Supabase loaders
+    def _load_menu_data_supabase(self) -> Dict[str, Any]:
+        """Load menu data from Supabase"""
+        try:
+            response = supabase.table("menu_items").select("*").execute()
+            items = response.data if response.data else []
+            return {"items": items}
+        except Exception as e:
+            logger.error(f"Error loading menu data from Supabase: {str(e)}")
+            return {"items": []}
+
+    def _load_allergens_data_supabase(self) -> Dict[str, Any]:
+        """Load allergens data from Supabase"""
+        try:
+            response = supabase.table("allergens").select("*").execute()
+            if response.data:
+                return response.data[0]
+            return {"allergens": []}
+        except Exception as e:
+            logger.error(f"Error loading allergens data from Supabase: {str(e)}")
+            return {"allergens": []}
+
+    def _load_ingredients_data_supabase(self) -> Dict[str, Any]:
+        """Load ingredients data from Supabase"""
+        try:
+            response = supabase.table("ingredients").select("*").execute()
+            if response.data:
+                return response.data[0]
+            return {"ingredients": []}
+        except Exception as e:
+            logger.error(f"Error loading ingredients data from Supabase: {str(e)}")
             return {"ingredients": []}
 
     def _create_sample_menu(self):
@@ -301,4 +341,4 @@ class MenuService:
                     current_time <= datetime.fromisoformat(special.get("end_time", "2100-01-01"))):
                     special_items.append(MenuItem(**item))
 
-        return special_items 
+        return special_items
