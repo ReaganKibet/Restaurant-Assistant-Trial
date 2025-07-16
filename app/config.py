@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # Primary LLM - Gemini API Configuration
-    gemini_api_key: str = os.getenv("GEMINI_API_KEY")
+    # Let Pydantic handle the environment variable loading
+    gemini_api_key: str
     gemini_model: str = "gemini-1.5-flash"
     
     # Fallback LLM - Ollama Configuration
@@ -69,7 +70,3 @@ class Settings(BaseSettings):
 
 # Create global settings instance
 settings = Settings()
-
-
-
-
