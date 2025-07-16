@@ -6,29 +6,12 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 import uvicorn
 from contextlib import asynccontextmanager
-from fastapi.staticfiles import StaticFiles
 
 from app.api import routes_chat, routes_meals, routes_admin
 from app.core.conversation_manager import ConversationManager
 from app.services.llm_service import LLMService
 from app.services.menu_service import MenuService
 from app.config import settings
-
-# Initialize FastAPI app
-app = FastAPI(
-    title="Restaurant AI Assistant",
-    description="An intelligent restaurant chatbot system that helps customers find the perfect meal",
-    version="1.0.0"
-)
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Replace with specific domains in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Services to be initialized on startup
 llm_service: LLMService = None
@@ -69,7 +52,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -78,9 +60,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Mount static files directory
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include routers
 app.include_router(routes_chat.router, prefix="/api/chat", tags=["chat"])
@@ -100,6 +79,11 @@ async def root():
             "docs": "/docs"
         }
     }
+
+@app.get("/health")
+async def health():
+    """Health check endpoint"""
+    return {"status": "ok"}
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -125,18 +109,6 @@ def get_llm_service():
     if llm_service is None:
         raise HTTPException(status_code=503, detail="Service not initialized")
     return llm_service
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    logger.info("Starting LLM Chat API")
-
-@app.get("/", response_model=dict)
-async def root() -> dict:
-    return {"message": "LLM Chat API", "docs": "/docs"}
-
-@app.get("/health", response_model=dict)
-async def health() -> dict:
-    return {"status": "ok"}
 
 if __name__ == "__main__":
     logger.add("logs/app.log", rotation="1 day", retention="30 days")
