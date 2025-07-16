@@ -73,12 +73,14 @@ export const Chat: React.FC = () => {
     }
   };
 
-  const handleStartChat = async () => {
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+  const startChat = async () => {
     setMessages([
       { text: "👋 Hi! I'm your restaurant assistant. How can I help you today?", sender: "assistant" }
     ]);
     try {
-      const res = await fetch("/api/chat/chat/start", {
+      const res = await fetch(`${API_BASE_URL}/api/chat/chat/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ preferences })
@@ -133,7 +135,7 @@ export const Chat: React.FC = () => {
             ))}
             <div ref={messagesEndRef} />
           </Box>
-          <form onSubmit={e => { e.preventDefault(); if (chatStarted) sendMessage(e); else handleStartChat(); }} style={{ display: 'flex', gap: 8 }}>
+          <form onSubmit={e => { e.preventDefault(); if (chatStarted) sendMessage(e); else startChat(); }} style={{ display: 'flex', gap: 8 }}>
             <input
               value={input}
               onChange={e => setInput(e.target.value)}

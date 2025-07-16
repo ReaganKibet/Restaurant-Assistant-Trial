@@ -35,10 +35,12 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ preferences }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch("/api/meals/menu")
+    fetch(`${API_BASE_URL}/api/meals/menu`)
       .then(res => res.json())
       .then(data => {
         // If the response is { menu: [...] }, use data.menu; if it's just [...], use data
