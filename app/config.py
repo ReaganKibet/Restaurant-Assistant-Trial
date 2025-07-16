@@ -3,11 +3,12 @@ from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 
-# Decide which .env file to load
-env = os.getenv("ENV", "local")
-env_file = ".env.production" if env == "production" else ".env.local"
-load_dotenv(env_file)
-
+# Load environment files only in local development
+if os.getenv("ENV") != "production":
+    env_file = ".env.local"
+    if os.path.exists(env_file):
+        load_dotenv(env_file)
+        
 class Settings(BaseSettings):
     # App settings
     APP_NAME: str = "Restaurant AI Assistant"
@@ -68,3 +69,7 @@ class Settings(BaseSettings):
 
 # Create global settings instance
 settings = Settings()
+
+
+
+
