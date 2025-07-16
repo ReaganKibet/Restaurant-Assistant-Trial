@@ -35,7 +35,7 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ preferences }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     setLoading(true);
