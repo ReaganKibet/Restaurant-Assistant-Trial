@@ -140,12 +140,21 @@ class MealSelector:
 
             # Generate recommendations
             recommendations = []
-            for item, score in scored_items[:limit]:
+            for idx, (item, score) in enumerate(scored_items[:limit]):
                 # Get alternatives (next best items)
-                alternatives = [
-                    alt_item if isinstance(alt_item, MenuItem) else MenuItem(**alt_item)
-                    for alt_item, alt_score in scored_items[limit:limit+2]
-                ]
+                alternatives = []
+                for alt_item, alt_score in scored_items[limit:limit+2]:
+                    alt_reason = self._generate_recommendation_reasons(
+                        alt_item, preferences, alt_score
+                    )
+                    # Create alternatives as MealRecommendation objects
+                    alternative = MealRecommendation(
+                        meal=alt_item,
+                        confidence_score=alt_score,
+                        reasoning=alt_reason,
+                        alternatives=[]  # Alternatives of alternatives can be empty
+                    )
+                    alternatives.append(alternative)
 
                 recommendation = MealRecommendation(
                     meal=item,
