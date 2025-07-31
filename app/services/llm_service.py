@@ -3,6 +3,7 @@ import json
 import asyncio
 import time
 import re
+import os
 from enum import Enum
 from dataclasses import dataclass
 from loguru import logger
@@ -43,6 +44,11 @@ class LLMService:
         # Ollama client for direct usage
         self.ollama_client = ollama.Client(host=settings.OLLAMA_BASE_URL)
         self.model = settings.MODEL_NAME
+
+        # Load menu data once at startup
+        menu_path = os.path.join(os.path.dirname(__file__), '../../data/menu_data.json')
+        with open(menu_path, 'r', encoding='utf-8') as f:
+            self.menu_data = json.load(f)["items"]
 
     def _init_services(self):
         """Initialize Gemini and Ollama services"""
@@ -182,6 +188,17 @@ class LLMService:
             pref_str += f"- Spice Preference: Level {preferences.spice_preference}/5\n"
         return pref_str
 
+    def _format_menu_for_prompt(self) -> str:
+        """Format menu items for LLM prompt"""
+        menu_lines = []
+        for item in self.menu_data:
+            menu_lines.append(
+                f"- {item.get('name', '')}: {item.get('description', '')} "
+                f"(Cuisine: {item.get('cuisine_type', '')}, Price: ${item.get('price', '')}, "
+                f"Dietary: {', '.join(item.get('dietary_tags', []))}, Allergens: {', '.join(item.get('allergens', []))})"
+            )
+        return "\n".join(menu_lines)
+
     async def generate_welcome_message(
         self,
         preferences: Optional[UserPreferences] = None
@@ -214,8 +231,14 @@ Response:"""
         preferences: Optional[UserPreferences] = None
     ) -> Dict[str, Any]:
         """Process a user message and generate a response"""
+        menu_text = self._format_menu_for_prompt()
         prompt = f"""You are a friendly and knowledgeable restaurant AI assistant for {settings.APP_NAME}.
 Your goal is to help customers find the perfect meal based on their preferences and needs.
+
+ONLY recommend meals from the menu below. Use the menu properties (ingredients, allergens, dietary tags, nutrition, etc.) to answer questions and explain suitability for health conditions (e.g., ulcers, allergies). Do NOT invent new dishes.
+
+Menu:
+{menu_text}
 
 {self._format_preferences(preferences)}
 
