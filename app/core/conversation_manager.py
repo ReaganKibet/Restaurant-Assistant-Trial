@@ -114,29 +114,25 @@ class ConversationManager:
         # Detect out-of-place or more info questions
         more_info_phrases = ["more about", "information", "details", "tell me more", "what else", "nutritional", "describe", "explain", "recommend side", "side dish"]
         if any(phrase in message.lower() for phrase in more_info_phrases):
-            # Build full meal context
+            # Use the improved nutritional interpretation
             if current_meal:
-                nutri = current_meal.nutritional_info or {}
-                meal_context = (
-                    f"Name: {current_meal.name}\n"
-                    f"Description: {current_meal.description}\n"
-                    f"Ingredients: {', '.join(current_meal.ingredients) if current_meal.ingredients else 'N/A'}\n"
-                    f"Cuisine: {getattr(current_meal.cuisine_type, 'value', str(current_meal.cuisine_type))}\n"
-                    f"Nutritional Info: Calories: {nutri.get('calories', 'N/A')}, Protein: {nutri.get('protein', 'N/A')}g, Carbs: {nutri.get('carbs', 'N/A')}g, Fat: {nutri.get('fat', 'N/A')}g.\n"
+                # Use the new get_meal_details method for direct, interpreted info
+                details = self.llm_service.get_meal_details(current_meal.name, message)
+                return ChatResponse(
+                    message=details,
+                    session_id=session_id,
+                    suggested_meals=[rec.meal for rec in filtered_meals],
+                    follow_up_questions=["Would you like to order this meal, add a side, or see more options?"],
+                    metadata=None
                 )
             else:
-                meal_context = "No meal details available."
-            ai_response = await self.llm_service.generate_response(
-                prompt=f"{message}\nHere are the meal details:\n{meal_context}",
-                context=session["messages"]
-            )
-            return ChatResponse(
-                message=ai_response["response"] if isinstance(ai_response, dict) else str(ai_response),
-                session_id=session_id,
-                suggested_meals=[rec.meal for rec in filtered_meals],
-                follow_up_questions=["Would you like to order this meal, add a side, or see more options?"],
-                metadata=None
-            )
+                return ChatResponse(
+                    message="No meal details available.",
+                    session_id=session_id,
+                    suggested_meals=[],
+                    follow_up_questions=["Would you like to see more options?"],
+                    metadata=None
+                )
 
         # If user asks for more options
         more_options_phrases = ["more options", "see more options", "next", "another", "show me more"]
@@ -155,13 +151,13 @@ class ConversationManager:
                     "I've shown you all the best matches. Would you like to adjust your preferences or try a different cuisine?"
                 )
                 follow_up = ["Would you like to change your preferences or try a different cuisine?"]
-            return ChatResponse(
-                message=response_message,
-                session_id=session_id,
-                suggested_meals=[rec.meal for rec in filtered_meals],
-                follow_up_questions=follow_up,
-                metadata=None
-            )
+                return ChatResponse(
+                    message=response_message,
+                    session_id=session_id,
+                    suggested_meals=[rec.meal for rec in filtered_meals],
+                    follow_up_questions=follow_up,
+                    metadata=None
+                )
 
         # Recommend immediately if filtered meals exist
         if filtered_meals:

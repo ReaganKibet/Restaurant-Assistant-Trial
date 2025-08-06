@@ -390,6 +390,46 @@ Response:"""
         self.consecutive_errors = 0
         self.current_provider = LLMProvider.GEMINI
 
+    def get_meal_details(self, meal_name: str, user_query: str) -> str:
+        # Find the meal in loaded menu data
+        meal = next((item for item in self.menu_data if item['name'].lower() == meal_name.lower()), None)
+        if not meal:
+            return "Sorry, I couldn't find details for that meal."
+
+        nutri = meal.get('nutritional_info', {})
+        calories = nutri.get('calories')
+        protein = nutri.get('protein')
+        carbs = nutri.get('carbs')
+        fat = nutri.get('fat')
+
+        # Try to extract calorie goal from user query
+        import re
+        calorie_goal = None
+        match = re.search(r'under (\d+)\s*calories', user_query.lower())
+        if match:
+            calorie_goal = int(match.group(1))
+
+        response = f"Here are the details for {meal['name']}:\n"
+        if calories is not None:
+                response += f"- Calories: {calories}\n"
+        if protein is not None:
+            response += f"- Protein: {protein}g\n"
+        if carbs is not None:
+            response += f"- Carbs: {carbs}g\n"
+        if fat is not None:
+            response += f"- Fat: {fat}g\n"
+        response += f"- Ingredients: {', '.join(meal.get('ingredients', []))}\n"
+        response += f"- Allergens: {', '.join(meal.get('allergens', []))}\n"
+
+        # Interpret according to user's calorie goal
+        if calorie_goal is not None and calories is not None:
+            if calories <= calorie_goal:
+                response += f"\nThis meal fits your goal of under {calorie_goal} calories."
+            else:
+                response += f"\nThis meal has more calories than your goal of {calorie_goal}. Consider a smaller portion or a lighter option."
+
+        return response
+
     def get_provider_stats(self) -> Dict[str, Any]:
         """Get statistics about provider usage"""
         return {
