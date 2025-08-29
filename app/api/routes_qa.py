@@ -17,7 +17,10 @@ class QAPairRequest(BaseModel):
     answer: str
     category: Optional[str] = None
 
-def get_rag_service(menu_service: MenuService = Depends()) -> RAGService:
+def get_menu_service() -> MenuService:
+    return MenuService()
+
+def get_rag_service(menu_service: MenuService = Depends(get_menu_service)) -> RAGService:
     return RAGService(menu_service)
 
 @router.post("/ask")

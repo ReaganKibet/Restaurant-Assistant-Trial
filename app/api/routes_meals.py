@@ -113,11 +113,15 @@ async def get_recommendations(
 async def get_similar_items(
     item_id: str,
     limit: int = Query(3, ge=1, le=10),
-    meal_selector: MealSelector = Depends(get_meal_selector)
+    meal_selector: MealSelector = Depends(get_meal_selector),
+    menu_service: MenuService = Depends(get_menu_service)
 ):
     """Get similar menu items based on a reference item"""
     try:
-        similar_meals = await meal_selector.get_similar_items(item_id, limit)
+        item = await menu_service.get_item_by_id(item_id)
+        if not item:
+            raise HTTPException(status_code=404, detail="Menu item not found")
+        similar_meals = await meal_selector.get_similar_items(item, limit)
         return similar_meals
     except Exception as e:
         logger.error(f"Error finding similar items: {str(e)}")

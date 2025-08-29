@@ -18,7 +18,7 @@ class OllamaService:
             full_prompt = f"{context}\n\n{prompt}" if context else prompt
 
             response = await self.client.generate(
-                model=settings.OLLAMA_BASE_URL,
+                model=settings.ollama_model,
                 prompt=full_prompt,
                 options={
                     'temperature': 0.7,

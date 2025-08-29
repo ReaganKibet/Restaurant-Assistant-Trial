@@ -192,11 +192,16 @@ class LLMService:
         """Format menu items for LLM prompt"""
         menu_lines = []
         for item in self.menu_data:
-            menu_lines.append(
-                f"- {item.get('name', '')}: {item.get('description', '')} "
-                f"(Cuisine: {item.get('cuisine_type', '')}, Price: ${item.get('price', '')}, "
-                f"Dietary: {', '.join(item.get('dietary_tags', []))}, Allergens: {', '.join(item.get('allergens', []))})"
-            )
+            try:
+                dietary = ", ".join(item.get('dietary_tags', []) or [])
+                allergens = ", ".join(item.get('allergens', []) or [])
+                menu_lines.append(
+                    f"- {item.get('name', '')}: {item.get('description', '')} "
+                    f"(Cuisine: {item.get('cuisine_type', '')}, Price: ${item.get('price', '')}, "
+                    f"Dietary: {dietary}, Allergens: {allergens})"
+                )
+            except Exception:
+                continue
         return "\n".join(menu_lines)
 
     async def generate_welcome_message(
@@ -440,6 +445,4 @@ Response:"""
             "last_health_check": self.last_health_check
         }
 
-    def clean_llm_json(text: str) -> str:
-        # Remove code block markers and language tags
-        return re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip(), flags=re.MULTILINE)
+    

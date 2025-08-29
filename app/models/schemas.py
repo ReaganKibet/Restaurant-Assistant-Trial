@@ -70,6 +70,8 @@ class MenuItem(BaseModel):
     is_gluten_free: bool
     is_dairy_free: bool
     image_url: Optional[str] = None
+    thumbnail_url: Optional[str] = None  # Add this for thumbnails
+    cloudinary_id: Optional[str] = None  # Add this to track Cloudinary ID
     available: bool
     popularity_score: float = 0.0
 

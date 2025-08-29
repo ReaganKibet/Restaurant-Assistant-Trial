@@ -13,22 +13,9 @@ from app.core.conversation_manager import ConversationManager
 from app.services.llm_service import LLMService
 from app.services.menu_service import MenuService
 from app.config import settings
-
-# Initialize FastAPI app
-app = FastAPI(
-    title="Restaurant AI Assistant",
-    description="An intelligent restaurant chatbot system that helps customers find the perfect meal",
-    version="1.0.0"
-)
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Replace with specific domains in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+from typing import Optional, Dict, Any
+import os
+from pathlib import Path
 
 # Services to be initialized on startup
 llm_service: LLMService = None
@@ -61,7 +48,7 @@ async def lifespan(app: FastAPI):
     logger.info("🛑 Shutting down Restaurant AI Assistant...")
 
 
-# Initialize FastAPI app with lifespan
+# Initialize FastAPI app with lifespan (single instance)
 app = FastAPI(
     title="Restaurant AI Assistant",
     description="An intelligent restaurant chatbot system that helps customers find the perfect meal",
@@ -130,13 +117,11 @@ def get_llm_service():
 async def startup_event() -> None:
     logger.info("Starting LLM Chat API")
 
-@app.get("/", response_model=dict)
-async def root() -> dict:
-    return {"message": "LLM Chat API", "docs": "/docs"}
-
 @app.get("/health", response_model=dict)
 async def health() -> dict:
     return {"status": "ok"}
+
+
 
 if __name__ == "__main__":
     logger.add("logs/app.log", rotation="1 day", retention="30 days")

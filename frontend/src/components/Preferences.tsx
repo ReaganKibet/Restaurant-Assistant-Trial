@@ -1,241 +1,263 @@
-import React from "react";
-import { Box, Card, CardContent, Typography, FormControl, InputLabel, Select, MenuItem, OutlinedInput, Chip, Slider, Button, FormHelperText, Divider, Grid, Paper } from "@mui/material";
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import LocalDiningIcon from '@mui/icons-material/LocalDining';
-import WhatshotIcon from '@mui/icons-material/Whatshot';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import React from 'react';
+import { UserPreferences } from '../types';
+import { 
+  Heart, 
+  AlertTriangle, 
+  DollarSign, 
+  Globe, 
+  X, 
+  Flame,
+  UtensilsCrossed,
+  MessageSquare,
+  Check
+} from 'lucide-react';
+import allergiesData from '../data/allergy.json';
+import ingredients from '../data/ingredients.json';
 
-// Helper for multi-select
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: 224,
-      width: 250,
-    },
-  },
-};
+interface PreferencesProps {
+  preferences: UserPreferences;
+  onUpdatePreferences: (updates: Partial<UserPreferences>) => void;
+  onSubmitPreferences: () => void;
+  isSubmitted: boolean;
+}
 
-type PreferencesProps = {
-  preferences: any;
-  setPreferences: (prefs: any) => void;
-  allergiesList: string[];
-  ingredientsList: string[];
-  cuisinesList: string[];
-  mealTypesList: string[];
-  dietaryRestrictionsList: string[];
-};
-
-export const Preferences: React.FC<PreferencesProps> = ({
-  preferences,
-  setPreferences,
-  allergiesList,
-  ingredientsList,
-  cuisinesList,
-  mealTypesList,
-  dietaryRestrictionsList
+const Preferences: React.FC<PreferencesProps> = ({ 
+  preferences, 
+  onUpdatePreferences, 
+  onSubmitPreferences,
+  isSubmitted 
 }) => {
-  const handleChange = (field: string, value: any) => {
-    setPreferences({ ...preferences, [field]: value });
-  };
+  const dietaryOptions = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Keto', 'Paleo'];
+  const cuisineOptions = ['Italian', 'Mexican', 'Indian', 'Chinese', 'American', 'Thai', 'Mediterranean', 'Japanese'];
+  const mealTypeOptions = ['Appetizer', 'Main Course', 'Dessert', 'Side', 'Salad', 'Soup'];
 
-  const handleMultiSelect = (field: string, value: string) => {
-    const arr = preferences[field] || [];
-    if (arr.includes(value)) {
-      handleChange(field, arr.filter((v: string) => v !== value));
-    } else {
-      handleChange(field, [...arr, value]);
-    }
+  const toggleArrayItem = (array: string[], item: string, key: keyof UserPreferences) => {
+    const newArray = array.includes(item)
+      ? array.filter(i => i !== item)
+      : [...array, item];
+    onUpdatePreferences({ [key]: newArray });
   };
 
   return (
-    <Card sx={{ mb: 3, background: '#f9f9f9', boxShadow: 2 }}>
-      <CardContent>
-        <Typography variant="h5" gutterBottom>Preferences</Typography>
-        <Divider sx={{ mb: 2 }} />
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            {/* Dietary Restrictions */}
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="dietary-restrictions-label">Dietary Restrictions</InputLabel>
-              <Select
-                labelId="dietary-restrictions-label"
-                multiple
-                value={preferences.dietary_restrictions}
-                onChange={e => handleChange("dietary_restrictions", e.target.value)}
-                input={<OutlinedInput label="Dietary Restrictions" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value: string) => (
-                      <Chip key={value} label={value} color="success" />
-                    ))}
-                  </Box>
-                )}
-                MenuProps={MenuProps}
-              >
-                {dietaryRestrictionsList.map(r => (
-                  <MenuItem key={r} value={r}>{r}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>Choose any dietary restrictions you have.</FormHelperText>
-            </FormControl>
-            
-            {/* Allergies */}
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="allergies-label">Allergies</InputLabel>
-              <Select
-                labelId="allergies-label"
-                multiple
-                value={preferences.allergies}
-                onChange={e => handleChange("allergies", e.target.value)}
-                input={<OutlinedInput label="Allergies" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value: string) => (
-                      <Chip key={value} label={value} color="error" />
-                    ))}
-                  </Box>
-                )}
-                MenuProps={MenuProps}
-              >
-                {allergiesList.map(a => (
-                  <MenuItem key={a} value={a}>{a}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>Select ingredients you are allergic to.</FormHelperText>
-            </FormControl>
-            
-            {/* Disliked Ingredients */}
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="disliked-ingredients-label">Disliked Ingredients</InputLabel>
-              <Select
-                labelId="disliked-ingredients-label"
-                multiple
-                value={preferences.disliked_ingredients}
-                onChange={e => handleChange("disliked_ingredients", e.target.value)}
-                input={<OutlinedInput label="Disliked Ingredients" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value: string) => (
-                      <Chip key={value} label={value} color="warning" />
-                    ))}
-                  </Box>
-                )}
-                MenuProps={MenuProps}
-              >
-                {ingredientsList.map(i => (
-                  <MenuItem key={i} value={i}>{i}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>Pick ingredients you dislike.</FormHelperText>
-            </FormControl>
-          </Grid>
-          
-          <Grid size={{ xs: 12, md: 6 }}>
-            {/* Price Range */}
-            <Box sx={{ mt: 2 }}>
-              <Typography gutterBottom><AttachMoneyIcon sx={{ mr: 1 }} />Price Range ($)</Typography>
-              <Slider
-                value={preferences.price_range}
-                onChange={(_, val) => handleChange("price_range", val)}
-                valueLabelDisplay="auto"
-                min={0}
-                max={100}
-                step={1}
-                sx={{ color: 'primary.main' }}
-              />
-              <FormHelperText>
-                Selected: ${preferences.price_range[0]} to ${preferences.price_range[1]}
-              </FormHelperText>
-            </Box>
-            
-            {/* Favorite Cuisines */}
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="cuisines-label">Favorite Cuisines</InputLabel>
-              <Select
-                labelId="cuisines-label"
-                multiple
-                value={preferences.favorite_cuisines}
-                onChange={e => handleChange("favorite_cuisines", e.target.value)}
-                input={<OutlinedInput label="Favorite Cuisines" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value: string) => (
-                      <Chip key={value} label={value} icon={<RestaurantIcon />} color="info" />
-                    ))}
-                  </Box>
-                )}
-                MenuProps={MenuProps}
-              >
-                {cuisinesList.map(c => (
-                  <MenuItem key={c} value={c}>{c}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>Pick cuisines you enjoy most.</FormHelperText>
-            </FormControl>
-            
-            {/* Spice Preference */}
-            <Box sx={{ mt: 2 }}>
-              <Typography gutterBottom><WhatshotIcon sx={{ mr: 1 }} />Spice Level</Typography>
-              <Slider
-                value={preferences.spice_preference}
-                onChange={(_, val) => handleChange("spice_preference", val)}
-                valueLabelDisplay="auto"
-                min={0}
-                max={5}
-                step={1}
-                sx={{ color: 'error.main' }}
-              />
-              <FormHelperText>How spicy do you like your food?</FormHelperText>
-            </Box>
-            
-            {/* Preferred Meal Types */}
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="meal-types-label">Preferred Meal Types</InputLabel>
-              <Select
-                labelId="meal-types-label"
-                multiple
-                value={preferences.preferred_meal_types}
-                onChange={e => handleChange("preferred_meal_types", e.target.value)}
-                input={<OutlinedInput label="Preferred Meal Types" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value: string) => (
-                      <Chip key={value} label={value} icon={<LocalDiningIcon />} color="secondary" />
-                    ))}
-                  </Box>
-                )}
-                MenuProps={MenuProps}
-              >
-                {mealTypesList.map(m => (
-                  <MenuItem key={m} value={m}>{m}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>Choose your preferred meal types.</FormHelperText>
-            </FormControl>
-            
-            {/* Dislikes (general) */}
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="dislikes-label">Dislikes (general)</InputLabel>
-              <OutlinedInput
-                id="dislikes"
-                value={preferences.dislikes.join(", ")}
-                onChange={e => handleChange("dislikes", e.target.value.split(",").map((v: string) => v.trim()))}
-                label="Dislikes (general)"
-              />
-              <FormHelperText>List any other dislikes, separated by commas.</FormHelperText>
-            </FormControl>
-          </Grid>
-        </Grid>
-        
-        <Divider sx={{ mt: 3, mb: 2 }} />
-        {/* Summary */}
-        <Paper elevation={3} sx={{ p: 2, background: '#e3f2fd' }}>
-          <Typography variant="subtitle2" color="primary">Summary:</Typography>
-          <Typography variant="body2">
-            Dietary: {preferences.dietary_restrictions.join(", ") || "None"} | Allergies: {preferences.allergies.join(", ") || "None"} | Cuisines: {preferences.favorite_cuisines.join(", ") || "None"} | Price: ${preferences.price_range[0]}-${preferences.price_range[1]}
-          </Typography>
-        </Paper>
-      </CardContent>
-    </Card>
+    <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
+      <div className="flex items-center space-x-2 mb-6">
+        <Heart className="text-amber-600 w-6 h-6" />
+        <h2 className="text-2xl font-semibold text-gray-800">Your Preferences</h2>
+      </div>
+
+      {/* Dietary Restrictions */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <UtensilsCrossed className="text-green-600 w-5 h-5" />
+          <h3 className="font-medium text-gray-700">Dietary Restrictions</h3>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {dietaryOptions.map(option => (
+            <button
+              key={option}
+              onClick={() => toggleArrayItem(preferences.dietaryRestrictions, option, 'dietaryRestrictions')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                preferences.dietaryRestrictions.includes(option)
+                  ? 'bg-green-100 text-green-800 border-2 border-green-300'
+                  : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Allergies */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <AlertTriangle className="text-red-600 w-5 h-5" />
+          <h3 className="font-medium text-gray-700">Allergies</h3>
+        </div>
+        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+          {allergiesData.common_allergens.map(allergy => (
+            <button
+              key={allergy}
+              onClick={() => toggleArrayItem(preferences.allergies, allergy, 'allergies')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                preferences.allergies.includes(allergy)
+                  ? 'bg-red-100 text-red-800 border-2 border-red-300'
+                  : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+              }`}
+            >
+              {allergy}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Range */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <DollarSign className="text-amber-600 w-5 h-5" />
+          <h3 className="font-medium text-gray-700">Price Range</h3>
+        </div>
+        <div className="space-y-2">
+          <input
+            type="range"
+            min="5"
+            max="50"
+            value={preferences.priceRange[1]}
+            onChange={(e) => onUpdatePreferences({
+              priceRange: [preferences.priceRange[0], parseInt(e.target.value)]
+            })}
+            className="w-full accent-amber-600"
+          />
+          <div className="flex justify-between text-sm text-gray-600">
+            <span>${preferences.priceRange[0]}</span>
+            <span>${preferences.priceRange[1]}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Favorite Cuisines */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <Globe className="text-blue-600 w-5 h-5" />
+          <h3 className="font-medium text-gray-700">Favorite Cuisines</h3>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {cuisineOptions.map(cuisine => (
+            <button
+              key={cuisine}
+              onClick={() => toggleArrayItem(preferences.favoriteCuisines, cuisine, 'favoriteCuisines')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                preferences.favoriteCuisines.includes(cuisine)
+                  ? 'bg-blue-100 text-blue-800 border-2 border-blue-300'
+                  : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+              }`}
+            >
+              {cuisine}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Spice Preference */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <Flame className="text-orange-600 w-5 h-5" />
+          <h3 className="font-medium text-gray-700">Spice Level (1-5)</h3>
+        </div>
+        <div className="space-y-2">
+          <input
+            type="range"
+            min="1"
+            max="5"
+            value={preferences.spicePreference}
+            onChange={(e) => onUpdatePreferences({ spicePreference: parseInt(e.target.value) })}
+            className="w-full accent-orange-600"
+          />
+          <div className="flex justify-center">
+            <div className="flex space-x-1">
+              {[1, 2, 3, 4, 5].map(level => (
+                <Flame
+                  key={level}
+                  className={`w-4 h-4 ${
+                    level <= preferences.spicePreference 
+                      ? 'text-orange-600 fill-current' 
+                      : 'text-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Preferred Meal Types */}
+      <div className="space-y-3">
+        <h3 className="font-medium text-gray-700">Preferred Meal Types</h3>
+        <div className="flex flex-wrap gap-2">
+          {mealTypeOptions.map(type => (
+            <button
+              key={type}
+              onClick={() => toggleArrayItem(preferences.preferredMealTypes, type, 'preferredMealTypes')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                preferences.preferredMealTypes.includes(type)
+                  ? 'bg-purple-100 text-purple-800 border-2 border-purple-300'
+                  : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+              }`}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Disliked Ingredients */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <X className="text-gray-600 w-5 h-5" />
+          <h3 className="font-medium text-gray-700">Disliked Ingredients</h3>
+        </div>
+        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+          {ingredients.map(ingredient => (
+            <button
+              key={ingredient}
+              onClick={() => toggleArrayItem(preferences.dislikedIngredients, ingredient, 'dislikedIngredients')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                preferences.dislikedIngredients.includes(ingredient)
+                  ? 'bg-gray-200 text-gray-800 border-2 border-gray-400'
+                  : 'bg-gray-100 text-gray-600 border-2 border-transparent hover:bg-gray-200'
+              }`}
+            >
+              {ingredient}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* General Dislikes */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <MessageSquare className="text-gray-600 w-5 h-5" />
+          <h3 className="font-medium text-gray-700">Additional Notes</h3>
+        </div>
+        <textarea
+          value={preferences.generalDislikes}
+          onChange={(e) => onUpdatePreferences({ generalDislikes: e.target.value })}
+          placeholder="Any other preferences or dislikes..."
+          className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+          rows={3}
+        />
+      </div>
+
+      {/* Submit Button */}
+      <div className="pt-4 border-t border-gray-200">
+        <button
+          onClick={onSubmitPreferences}
+          className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+            isSubmitted
+              ? 'bg-green-100 text-green-800 border-2 border-green-300'
+              : 'bg-amber-600 text-white hover:bg-amber-700 hover:shadow-lg transform hover:-translate-y-0.5'
+          }`}
+        >
+          {isSubmitted ? (
+            <>
+              <Check className="w-5 h-5" />
+              <span>Preferences Submitted</span>
+            </>
+          ) : (
+            <>
+              <Heart className="w-5 h-5" />
+              <span>Submit My Preferences</span>
+            </>
+          )}
+        </button>
+        {isSubmitted && (
+          <p className="text-center text-sm text-green-600 mt-2">
+            Your preferences have been saved and will be used for recommendations!
+          </p>
+        )}
+      </div>
+    </div>
   );
 };
+
+export default Preferences;

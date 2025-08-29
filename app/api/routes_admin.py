@@ -38,13 +38,13 @@ async def admin_health_check():
         health_status["status"] = "degraded"
 
     try:
-        # Check LLM service
+        # Check LLM service via provider health
         llm_service = LLMService()
-        test_response = await llm_service._generate_response("Hello, this is a health check.")
+        providers = await llm_service.health_check()
         health_status["services"]["llm_service"] = {
-            "status": "healthy",
-            "model": llm_service.model,
-            "base_url": llm_service.base_url
+            "status": "healthy" if any(providers.values()) else "degraded",
+            "providers": providers,
+            "model": llm_service.model
         }
     except Exception as e:
         health_status["services"]["llm_service"] = {
@@ -85,13 +85,13 @@ async def test_llm_connection(
 ):
     """Test LLM connection and response"""
     try:
-        response = await llm_service._generate_response(test_message)
+        result = await llm_service.generate_response(test_message)
         return {
             "status": "success",
             "model": llm_service.model,
-            "base_url": llm_service.base_url,
+            "provider": result.get("provider"),
             "test_message": test_message,
-            "llm_response": response
+            "llm_response": result.get("response")
         }
     except Exception as e:
         logger.error(f"LLM test failed: {str(e)}")

@@ -2,6 +2,10 @@ import os
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from typing import List, Optional
+from pydantic import Field
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 load_dotenv()  # Loads variables from .env
 
@@ -59,9 +63,22 @@ class Settings(BaseSettings):
     retry_min_wait: int = 4
     retry_max_wait: int = 10
     
+    # Cloudinary settings
+    cloudinary_cloud_name: str = Field(..., env="CLOUDINARY_CLOUD_NAME")
+    cloudinary_api_key: str = Field(..., env="CLOUDINARY_API_KEY")
+    cloudinary_api_secret: str = Field(..., env="CLOUDINARY_API_SECRET")
+    
     class Config:
         env_file = ".env"
         extra = "allow"
 
 # Create global settings instance
 settings = Settings()
+
+# Initialize Cloudinary
+def init_cloudinary():
+    cloudinary.config(
+        cloud_name=settings.cloudinary_cloud_name,
+        api_key=settings.cloudinary_api_key,
+        api_secret=settings.cloudinary_api_secret
+    )

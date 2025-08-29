@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Optional
 import json
 from loguru import logger
 from datetime import datetime
+import uuid
 
 from app.config import settings
 from app.models.schemas import MenuItem, MealCategory
@@ -25,6 +26,8 @@ class MenuService:
         self._load_menu_data()
         self._load_allergens_data()
         self._load_ingredients_data()
+
+        # Image upload/storage provider removed
 
     def _load_menu_data(self) -> Dict[str, Any]:
         """Load menu data from JSON file"""
@@ -207,12 +210,16 @@ class MenuService:
                     continue
             
             # Category filter
-            if category and item.category.lower() != category.lower():
-                continue
+            if category:
+                item_category = item.category.value if hasattr(item.category, 'value') else str(item.category)
+                if item_category.lower() != category.lower():
+                    continue
                 
             # Cuisine type filter
-            if cuisine_type and item.cuisine_type.lower() != cuisine_type.lower():
-                continue
+            if cuisine_type:
+                item_cuisine = item.cuisine_type.value if hasattr(item.cuisine_type, 'value') else str(item.cuisine_type)
+                if item_cuisine.lower() != cuisine_type.lower():
+                    continue
                 
             # Dietary tags filter
             if dietary_tags:
@@ -302,3 +309,27 @@ class MenuService:
                     special_items.append(MenuItem(**item))
 
         return special_items 
+
+    # Image-related methods removed with Cloudinary
+
+    def _save_menu_data(self):
+        """Save menu data to JSON file"""
+        try:
+            menu_data = {
+                "items": [item.dict() for item in self.menu_items]
+            }
+            with open(self.menu_data_path, 'w') as f:
+                json.dump(menu_data, f, indent=2, default=str)
+        except Exception as e:
+            logger.error(f"Error saving menu data: {str(e)}")
+
+    def get_menu_item_with_images(self, menu_item_id: str) -> Optional[MenuItem]:
+        """Get menu item with image information"""
+        return next((item for item in self.menu_items if item.id == menu_item_id), None)
+
+    def get_menu_items_by_category_with_images(self, category: str) -> List[MenuItem]:
+        """Get menu items by category with image information"""
+        return [
+            item for item in self.menu_items 
+            if item.available and item.category.value.lower() == category.lower()
+        ] 

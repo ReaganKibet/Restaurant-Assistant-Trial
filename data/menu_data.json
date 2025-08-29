@@ -3,412 +3,617 @@
     {
       "id": "1",
       "name": "Margherita Pizza",
-      "description": "Classic pizza with fresh mozzarella, tomato sauce, and basil",
+      "description": "Classic Italian pizza with fresh mozzarella, san marzano tomatoes, and basil on a wood-fired crust",
       "price": 14.99,
-      "category": "main_course",
-      "cuisine_type": "italian",
+      "image": "https://images.pexels.com/photos/315755/pexels-photo-315755.jpeg",
       "ingredients": [
-        "mozzarella",
-        "tomato sauce",
-        "basil",
-        "pizza dough",
-        "olive oil"
+        "Mozzarella",
+        "Tomato Sauce",
+        "Basil",
+        "Pizza Dough",
+        "Olive Oil"
       ],
       "allergens": [
-        "gluten",
-        "dairy"
+        "Wheat",
+        "Dairy"
       ],
       "dietary_tags": [
-        "vegetarian"
+        "Vegetarian"
       ],
+      "cuisine_type": "italian",
+      "category": "main_course",
       "spice_level": 1,
       "preparation_time": 15,
       "popularity_score": 8.5,
       "available": true,
+      "is_vegetarian": true,
+      "is_vegan": false,
+      "is_gluten_free": false,
+      "is_dairy_free": false,
       "nutritional_info": {
         "calories": 720,
         "protein": 28,
         "carbs": 85,
         "fat": 25
       },
-      "is_vegetarian": true,
-      "is_vegan": false,
-      "is_gluten_free": false,
-      "is_dairy_free": false
+      "reviews": [
+        {
+          "id": "r1",
+          "user": "Sarah M.",
+          "rating": 5,
+          "comment": "Absolutely delicious! The crust is perfectly crispy and the mozzarella is so fresh.",
+          "date": "2024-01-15"
+        },
+        {
+          "id": "r2",
+          "user": "Mike R.",
+          "rating": 4,
+          "comment": "Great traditional pizza. Love the basil and tomato combination.",
+          "date": "2024-01-12"
+        }
+      ],
+      "average_rating": 4.5,
+      "total_reviews": 127
     },
     {
       "id": "2",
       "name": "Chicken Tikka Masala",
-      "description": "Tender chicken in creamy tomato-based curry with aromatic spices",
+      "description": "Tender grilled chicken in a creamy spiced tomato sauce with aromatic garam masala, served with basmati rice",
       "price": 18.99,
-      "category": "main_course",
-      "cuisine_type": "indian",
+      "image": "https://images.pexels.com/photos/6999518/pexels-photo-6999518.jpeg",
       "ingredients": [
-        "chicken",
-        "tomatoes",
-        "cream",
-        "onions",
-        "garlic",
-        "ginger",
-        "garam masala",
-        "turmeric"
+        "Chicken",
+        "Tomatoes",
+        "Cream",
+        "Onions",
+        "Garlic",
+        "Ginger",
+        "Garam Masala",
+        "Turmeric"
       ],
       "allergens": [
-        "dairy"
+        "Dairy"
       ],
       "dietary_tags": [
-        "gluten-free"
+        "Gluten-Free"
       ],
+      "cuisine_type": "indian",
+      "category": "main_course",
       "spice_level": 3,
       "preparation_time": 25,
       "popularity_score": 9.2,
       "available": true,
+      "is_vegetarian": false,
+      "is_vegan": false,
+      "is_gluten_free": true,
+      "is_dairy_free": false,
       "nutritional_info": {
         "calories": 650,
         "protein": 45,
         "carbs": 35,
         "fat": 35
       },
-      "is_vegetarian": false,
-      "is_vegan": false,
-      "is_gluten_free": true,
-      "is_dairy_free": false
+      "reviews": [
+        {
+          "id": "r3",
+          "user": "Priya K.",
+          "rating": 5,
+          "comment": "Authentic Indian flavors! The chicken is so tender and the sauce is perfectly spiced.",
+          "date": "2024-01-14"
+        },
+        {
+          "id": "r4",
+          "user": "David L.",
+          "rating": 4,
+          "comment": "Great curry, love the creaminess. Could be a bit spicier though.",
+          "date": "2024-01-10"
+        }
+      ],
+      "average_rating": 4.5,
+      "total_reviews": 89
     },
     {
       "id": "3",
       "name": "Caesar Salad",
-      "description": "Crisp romaine lettuce with parmesan, croutons, and caesar dressing",
+      "description": "Crisp romaine lettuce with parmesan, garlic croutons, and house-made caesar dressing with anchovy essence",
       "price": 12.99,
-      "category": "side_dish",
-      "cuisine_type": "american",
+      "image": "https://images.pexels.com/photos/2116094/pexels-photo-2116094.jpeg",
       "ingredients": [
-        "romaine lettuce",
-        "parmesan cheese",
-        "croutons",
-        "caesar dressing",
-        "anchovies"
+        "Romaine Lettuce",
+        "Parmesan",
+        "Croutons",
+        "Caesar Dressing",
+        "Anchovies"
       ],
       "allergens": [
-        "dairy",
-        "eggs",
-        "gluten",
-        "fish"
+        "Dairy",
+        "Eggs",
+        "Wheat",
+        "Fish"
       ],
       "dietary_tags": [
-        "vegetarian"
+        "Vegetarian"
       ],
+      "cuisine_type": "american",
+      "category": "main_course",
       "spice_level": 0,
       "preparation_time": 10,
       "popularity_score": 7.8,
       "available": true,
+      "is_vegetarian": true,
+      "is_vegan": false,
+      "is_gluten_free": false,
+      "is_dairy_free": false,
       "nutritional_info": {
         "calories": 320,
         "protein": 12,
         "carbs": 18,
         "fat": 22
-      },
-      "is_vegetarian": true,
-      "is_vegan": false,
-      "is_gluten_free": false,
-      "is_dairy_free": false
+      }
     },
     {
       "id": "4",
       "name": "Beef Tacos",
-      "description": "Three soft shell tacos with seasoned ground beef, lettuce, tomatoes, and cheese",
+      "description": "Three soft flour tortillas filled with seasoned ground beef, fresh pico de gallo, lettuce, and cheddar cheese",
       "price": 13.99,
-      "category": "main_course",
-      "cuisine_type": "mexican",
+      "image": "https://images.pexels.com/photos/708587/pexels-photo-708587.jpeg",
       "ingredients": [
-        "ground beef",
-        "flour tortillas",
-        "lettuce",
-        "tomatoes",
-        "cheddar cheese",
-        "onions",
-        "lime"
+        "Ground Beef",
+        "Flour Tortillas",
+        "Lettuce",
+        "Tomatoes",
+        "Cheddar Cheese",
+        "Onions",
+        "Lime"
       ],
       "allergens": [
-        "gluten",
-        "dairy"
+        "Wheat",
+        "Dairy"
       ],
       "dietary_tags": [],
+      "cuisine_type": "mexican",
+      "category": "main_course",
       "spice_level": 2,
       "preparation_time": 12,
       "popularity_score": 8.7,
       "available": true,
+      "is_vegetarian": false,
+      "is_vegan": false,
+      "is_gluten_free": false,
+      "is_dairy_free": false,
       "nutritional_info": {
         "calories": 580,
         "protein": 32,
         "carbs": 45,
         "fat": 28
-      },
-      "is_vegetarian": false,
-      "is_vegan": false,
-      "is_gluten_free": false,
-      "is_dairy_free": false
+      }
     },
     {
       "id": "5",
       "name": "Vegan Buddha Bowl",
-      "description": "Quinoa bowl with roasted vegetables, chickpeas, avocado, and tahini dressing",
+      "description": "Nutrient-rich bowl with quinoa, roasted sweet potato, broccoli, chickpeas, avocado, and tahini-lemon dressing",
       "price": 15.99,
-      "category": "main_course",
-      "cuisine_type": "other",
+      "image": "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg",
       "ingredients": [
-        "quinoa",
-        "chickpeas",
-        "sweet potato",
-        "broccoli",
-        "avocado",
-        "tahini",
-        "lemon",
-        "spinach"
+        "Quinoa",
+        "Chickpeas",
+        "Sweet Potato",
+        "Broccoli",
+        "Avocado",
+        "Tahini",
+        "Lemon",
+        "Spinach"
       ],
       "allergens": [
-        "sesame"
+        "Sesame"
       ],
       "dietary_tags": [
-        "vegan",
-        "gluten-free"
+        "Vegan",
+        "Gluten-Free"
       ],
+      "cuisine_type": "mediterranean",
+      "category": "main_course",
       "spice_level": 1,
       "preparation_time": 18,
       "popularity_score": 8.1,
       "available": true,
+      "is_vegetarian": true,
+      "is_vegan": true,
+      "is_gluten_free": true,
+      "is_dairy_free": true,
       "nutritional_info": {
         "calories": 520,
         "protein": 18,
         "carbs": 65,
         "fat": 22
-      },
-      "is_vegetarian": true,
-      "is_vegan": true,
-      "is_gluten_free": true,
-      "is_dairy_free": true
+      }
     },
     {
       "id": "6",
       "name": "Salmon Teriyaki",
-      "description": "Grilled salmon with teriyaki glaze, served with steamed rice and vegetables",
+      "description": "Grilled Atlantic salmon glazed with house teriyaki sauce, served with steamed jasmine rice and seasonal vegetables",
       "price": 22.99,
-      "category": "main_course",
-      "cuisine_type": "japanese",
+      "image": "https://images.pexels.com/photos/842571/pexels-photo-842571.jpeg",
       "ingredients": [
-        "salmon",
-        "teriyaki sauce",
-        "jasmine rice",
-        "broccoli",
-        "carrots",
-        "soy sauce"
+        "Salmon",
+        "Teriyaki Sauce",
+        "Jasmine Rice",
+        "Broccoli",
+        "Carrots",
+        "Soy Sauce"
       ],
       "allergens": [
-        "fish",
-        "soy",
-        "gluten"
+        "Fish",
+        "Soy",
+        "Wheat"
       ],
       "dietary_tags": [],
+      "cuisine_type": "japanese",
+      "category": "main_course",
       "spice_level": 1,
       "preparation_time": 20,
       "popularity_score": 9.0,
       "available": true,
+      "is_vegetarian": false,
+      "is_vegan": false,
+      "is_gluten_free": false,
+      "is_dairy_free": true,
       "nutritional_info": {
         "calories": 680,
         "protein": 42,
         "carbs": 55,
         "fat": 28
-      },
-      "is_vegetarian": false,
-      "is_vegan": false,
-      "is_gluten_free": false,
-      "is_dairy_free": true
+      }
     },
     {
       "id": "7",
       "name": "Mushroom Risotto",
-      "description": "Creamy arborio rice with mixed mushrooms, parmesan, and white wine",
+      "description": "Creamy arborio rice cooked with mixed wild mushrooms, white wine, vegetable stock, and parmesan cheese",
       "price": 17.99,
-      "category": "main_course",
-      "cuisine_type": "italian",
+      "image": "https://images.pexels.com/photos/257816/pexels-photo-257816.jpeg",
       "ingredients": [
-        "arborio rice",
-        "mixed mushrooms",
-        "parmesan cheese",
-        "white wine",
-        "onions",
-        "vegetable stock"
+        "Arborio Rice",
+        "Mixed Mushrooms",
+        "Parmesan",
+        "White Wine",
+        "Onions",
+        "Vegetable Stock"
       ],
       "allergens": [
-        "dairy",
-        "gluten"
+        "Dairy",
+        "Wheat"
       ],
       "dietary_tags": [
-        "vegetarian"
+        "Vegetarian"
       ],
+      "cuisine_type": "italian",
+      "category": "main_course",
       "spice_level": 0,
       "preparation_time": 30,
       "popularity_score": 8.3,
       "available": true,
+      "is_vegetarian": true,
+      "is_vegan": false,
+      "is_gluten_free": false,
+      "is_dairy_free": false,
       "nutritional_info": {
         "calories": 480,
         "protein": 16,
         "carbs": 68,
         "fat": 18
-      },
-      "is_vegetarian": true,
-      "is_vegan": false,
-      "is_gluten_free": false,
-      "is_dairy_free": false
+      }
     },
     {
       "id": "8",
       "name": "Spicy Thai Pad Thai",
-      "description": "Stir-fried rice noodles with tofu, bean sprouts, peanuts, and spicy tamarind sauce",
+      "description": "Stir-fried rice noodles with tofu, bean sprouts, crushed peanuts, tamarind sauce, and chili heat",
       "price": 16.99,
-      "category": "main_course",
-      "cuisine_type": "thai",
+      "image": "https://images.pexels.com/photos/6911644/pexels-photo-6911644.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "ingredients": [
-        "rice noodles",
-        "tofu",
-        "bean sprouts",
-        "peanuts",
-        "tamarind",
-        "fish sauce",
-        "chili",
-        "lime"
+        "Rice Noodles",
+        "Tofu",
+        "Bean Sprouts",
+        "Peanuts",
+        "Tamarind",
+        "Fish Sauce",
+        "Chili",
+        "Lime"
       ],
       "allergens": [
-        "peanuts",
-        "fish",
-        "soy"
+        "Peanuts",
+        "Fish",
+        "Soy"
       ],
       "dietary_tags": [
-        "vegetarian"
+        "Vegetarian"
       ],
+      "cuisine_type": "thai",
+      "category": "main_course",
       "spice_level": 4,
       "preparation_time": 15,
       "popularity_score": 8.9,
       "available": true,
+      "is_vegetarian": true,
+      "is_vegan": false,
+      "is_gluten_free": true,
+      "is_dairy_free": true,
       "nutritional_info": {
         "calories": 590,
         "protein": 22,
         "carbs": 75,
         "fat": 24
-      },
-      "is_vegetarian": true,
-      "is_vegan": false,
-      "is_gluten_free": true,
-      "is_dairy_free": true
+      }
     },
     {
       "id": "9",
       "name": "Classic Cheeseburger",
-      "description": "Beef patty with cheddar cheese, lettuce, tomato, onion, and special sauce on a brioche bun",
+      "description": "Juicy beef patty topped with cheddar, lettuce, tomato, onion, and special sauce on a toasted brioche bun",
       "price": 16.99,
-      "category": "main_course",
-      "cuisine_type": "american",
+      "image": "https://images.pexels.com/photos/2233516/pexels-photo-2233516.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "ingredients": [
-        "beef patty",
-        "cheddar cheese",
-        "brioche bun",
-        "lettuce",
-        "tomato",
-        "onion",
-        "mayonnaise"
+        "Beef Patty",
+        "Cheddar Cheese",
+        "Brioche Bun",
+        "Lettuce",
+        "Tomato",
+        "Onion",
+        "Mayonnaise"
       ],
       "allergens": [
-        "gluten",
-        "dairy",
-        "eggs"
+        "Wheat",
+        "Dairy",
+        "Eggs"
       ],
       "dietary_tags": [],
+      "cuisine_type": "american",
+      "category": "main_course",
       "spice_level": 1,
       "preparation_time": 12,
       "popularity_score": 9.1,
       "available": true,
+      "is_vegetarian": false,
+      "is_vegan": false,
+      "is_gluten_free": false,
+      "is_dairy_free": false,
       "nutritional_info": {
         "calories": 750,
         "protein": 38,
         "carbs": 42,
         "fat": 45
-      },
-      "is_vegetarian": false,
-      "is_vegan": false,
-      "is_gluten_free": false,
-      "is_dairy_free": false
+      }
     },
     {
       "id": "10",
       "name": "Greek Moussaka",
-      "description": "Layered casserole with eggplant, ground lamb, and béchamel sauce",
+      "description": "Traditional layered casserole with eggplant, spiced ground lamb, tomatoes, and creamy béchamel topping",
       "price": 19.99,
-      "category": "main_course",
-      "cuisine_type": "greek",
+      "image": "https://images.pexels.com/photos/769521/pexels-photo-769521.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "ingredients": [
-        "eggplant",
-        "ground lamb",
-        "béchamel sauce",
-        "tomatoes",
-        "onions",
-        "cheese",
-        "olive oil"
+        "Eggplant",
+        "Ground Lamb",
+        "Béchamel Sauce",
+        "Tomatoes",
+        "Onions",
+        "Cheese",
+        "Olive Oil"
       ],
       "allergens": [
-        "dairy",
-        "gluten"
+        "Dairy",
+        "Wheat"
       ],
       "dietary_tags": [],
+      "cuisine_type": "greek",
+      "category": "main_course",
       "spice_level": 2,
       "preparation_time": 45,
       "popularity_score": 7.9,
       "available": true,
+      "is_vegetarian": false,
+      "is_vegan": false,
+      "is_gluten_free": false,
+      "is_dairy_free": false,
       "nutritional_info": {
         "calories": 620,
         "protein": 35,
         "carbs": 38,
         "fat": 35
-      },
-      "is_vegetarian": false,
-      "is_vegan": false,
-      "is_gluten_free": false,
-      "is_dairy_free": false
+      }
     },
     {
       "id": "11",
       "name": "Thai Green Curry",
-      "description": "A fragrant and spicy curry with coconut milk, green curry paste, chicken, and vegetables",
+      "description": "Fragrant and spicy green curry with coconut milk, chicken, bamboo shoots, bell peppers, and Thai basil",
       "price": 17.49,
-      "category": "main_course",
-      "cuisine_type": "thai",
+      "image": "https://images.pexels.com/photos/6999520/pexels-photo-6999520.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       "ingredients": [
-        "chicken",
-        "green curry paste",
-        "coconut milk",
-        "bamboo shoots",
-        "bell peppers",
-        "basil",
-        "fish sauce"
+        "Chicken",
+        "Green Curry Paste",
+        "Coconut Milk",
+        "Bamboo Shoots",
+        "Bell Peppers",
+        "Basil",
+        "Fish Sauce"
       ],
       "allergens": [
-        "fish"
+        "Fish"
       ],
       "dietary_tags": [
-        "high_protein"
+        "High Protein"
       ],
+      "cuisine_type": "thai",
+      "category": "main_course",
       "spice_level": 4,
       "preparation_time": 35,
       "popularity_score": 8.6,
       "available": true,
+      "is_vegetarian": false,
+      "is_vegan": false,
+      "is_gluten_free": true,
+      "is_dairy_free": true,
       "nutritional_info": {
         "calories": 540,
         "protein": 40,
         "carbs": 25,
         "fat": 30
-      },
+      }
+    },
+    {
+      "id": "12",
+      "name": "Shrimp Tacos with Mango Salsa",
+      "description": "Grilled shrimp in soft corn tortillas with fresh mango-avocado salsa, cabbage slaw, and lime crema",
+      "price": 17.99,
+      "image": "https://images.pexels.com/photos/1624487/pexels-photo-1624487.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+      "ingredients": [
+        "Shrimp",
+        "Corn Tortillas",
+        "Mango",
+        "Avocado",
+        "Cabbage",
+        "Cilantro",
+        "Lime",
+        "Crema"
+      ],
+      "allergens": [
+        "Shellfish",
+        "Dairy"
+      ],
+      "dietary_tags": [
+        "Gluten-Free"
+      ],
+      "cuisine_type": "mexican",
+      "category": "main_course",
+      "spice_level": 3,
+      "preparation_time": 18,
+      "popularity_score": 8.8,
+      "available": true,
       "is_vegetarian": false,
       "is_vegan": false,
       "is_gluten_free": true,
-      "is_dairy_free": true
+      "is_dairy_free": false,
+      "nutritional_info": {
+        "calories": 490,
+        "protein": 26,
+        "carbs": 48,
+        "fat": 22
+      }
+    },
+    {
+      "id": "13",
+      "name": "Lentil & Sweet Potato Curry",
+      "description": "Hearty vegan curry with red lentils, sweet potatoes, spinach, and warm Indian spices in coconut milk",
+      "price": 14.99,
+      "image": "https://images.pexels.com/photos/6999516/pexels-photo-6999516.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+      "ingredients": [
+        "Red Lentils",
+        "Sweet Potato",
+        "Spinach",
+        "Coconut Milk",
+        "Onions",
+        "Garlic",
+        "Curry Spices"
+      ],
+      "allergens": [],
+      "dietary_tags": [
+        "Vegan",
+        "Gluten-Free",
+        "Dairy-Free"
+      ],
+      "cuisine_type": "indian",
+      "category": "main_course",
+      "spice_level": 2,
+      "preparation_time": 35,
+      "popularity_score": 8.4,
+      "available": true,
+      "is_vegetarian": true,
+      "is_vegan": true,
+      "is_gluten_free": true,
+      "is_dairy_free": true,
+      "nutritional_info": {
+        "calories": 460,
+        "protein": 18,
+        "carbs": 72,
+        "fat": 14
+      }
+    },
+    {
+      "id": "14",
+      "name": "Berry Chia Pudding",
+      "description": "Overnight chia pudding with almond milk, vanilla, and topped with mixed berries and granola",
+      "price": 9.99,
+      "image": "https://images.pexels.com/photos/1092730/pexels-photo-1092730.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+      "ingredients": [
+        "Chia Seeds",
+        "Almond Milk",
+        "Vanilla",
+        "Mixed Berries",
+        "Granola",
+        "Maple Syrup"
+      ],
+      "allergens": [
+        "Tree Nuts",
+        "Gluten"
+      ],
+      "dietary_tags": [
+        "Vegan",
+        "Gluten-Free Option"
+      ],
+      "cuisine_type": "american",
+      "category": "dessert",
+      "spice_level": 0,
+      "preparation_time": 5,
+      "popularity_score": 7.6,
+      "available": true,
+      "is_vegetarian": true,
+      "is_vegan": true,
+      "is_gluten_free": false,
+      "is_dairy_free": true,
+      "nutritional_info": {
+        "calories": 320,
+        "protein": 8,
+        "carbs": 48,
+        "fat": 12
+      }
+    },
+    {
+      "id": "15",
+      "name": "Korean Bibimbap",
+      "description": "Korean mixed rice bowl with marinated beef, sautéed vegetables, fried egg, and gochujang sauce",
+      "price": 18.49,
+      "image": "https://images.pexels.com/photos/6999512/pexels-photo-6999512.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+      "ingredients": [
+        "Jasmine Rice",
+        "Beef",
+        "Carrots",
+        "Spinach",
+        "Zucchini",
+        "Mushrooms",
+        "Fried Egg",
+        "Gochujang"
+      ],
+      "allergens": [
+        "Eggs",
+        "Soy",
+        "Wheat"
+      ],
+      "dietary_tags": [
+        "High Protein"
+      ],
+      "cuisine_type": "korean",
+      "category": "main_course",
+      "spice_level": 3,
+      "preparation_time": 22,
+      "popularity_score": 9.3,
+      "available": true,
+      "is_vegetarian": false,
+      "is_vegan": false,
+      "is_gluten_free": false,
+      "is_dairy_free": true,
+      "nutritional_info": {
+        "calories": 610,
+        "protein": 34,
+        "carbs": 68,
+        "fat": 24
+      }
     }
   ]
 }

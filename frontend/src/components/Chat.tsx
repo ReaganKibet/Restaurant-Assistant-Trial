@@ -1,152 +1,121 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Preferences } from "./Preferences";
-import { MenuSection } from "./MenuSection";
-import allergiesData from "../data/allergy.json";
-import ingredientsData from "../data/ingredients.json";
-import { Box, Button, Paper, Typography, Divider } from "@mui/material";
+import React from 'react';
+import { usePreferences } from '../hooks/usePreferences';
+import { useChat } from '../hooks/useChat';
+import Preferences from './Preferences';
+import MenuSection from './MenuSection';
+import ChatInterface from './ChatInterface';
 
-// Extract string arrays for preferences UI
-const allergiesList = allergiesData.common_allergens || [];
-const ingredientsList = Array.isArray(ingredientsData.ingredients)
-  ? ingredientsData.ingredients.map((i: any) => i.name)
-  : [];
+const Chat: React.FC = () => {
+  const { preferences, updatePreferences } = usePreferences();
+  const { session, startChat, sendMessage } = useChat();
+  const [preferencesSubmitted, setPreferencesSubmitted] = React.useState(false);
+  const hasInitializedRef = React.useRef(false); // Critical fix: use ref instead of state
 
-type Message = {
-  text: string;
-  sender: "user" | "assistant";
-};
+  // SINGLE initialization point - ONLY via preferences submission
+  const initializeChat = React.useCallback(async () => {
+    if (hasInitializedRef.current || session.isStarted) return;
+    
+    hasInitializedRef.current = true;
+    await startChat(preferences);
+  }, [preferences, session.isStarted, startChat]);
 
-const cuisinesList = ["Italian", "Mexican", "Indian", "Chinese", "American"];
-const mealTypesList = ["appetizer", "main course", "dessert", "side"];
-const dietaryRestrictionsList = ["vegetarian", "vegan", "gluten_free", "dairy_free"];
-
-const defaultPreferences = {
-  dietary_restrictions: ["vegetarian"],
-  allergies: ["peanuts", "shellfish"],
-  price_range: [10, 30],
-  favorite_cuisines: ["Italian", "Mexican"],
-  disliked_ingredients: [],
-  spice_preference: 2,
-  preferred_meal_types: [],
-  dislikes: []
-};
-
-export const Chat: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [preferences, setPreferences] = useState(defaultPreferences);
-  const [chatStarted, setChatStarted] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || !sessionId) return;
-    const userMsg = { text: input, sender: "user" as const };
-    setMessages((msgs) => [...msgs, userMsg]);
-    setInput("");
-
-    try {
-      const res = await fetch("/api/chat/chat/message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: input,
-          session_id: sessionId,
-          preferences
-        })
-      });
-      const data = await res.json();
-      if (data.message) setMessages((msgs) => [...msgs, { text: data.message, sender: "assistant" }]);
-      if (data.follow_up_questions) {
-        data.follow_up_questions.forEach((q: string) =>
-          setMessages((msgs) => [...msgs, { text: "💡 " + q, sender: "assistant" }])
-        );
+  const handleSubmitPreferences = async () => {
+    setPreferencesSubmitted(true);
+    
+    // Only initialize if not already started
+    if (!session.isStarted) {
+      await initializeChat();
+    } else {
+      const preferenceSummary = generatePreferenceSummary(preferences);
+      if (session.sessionId) {
+        await sendMessage(session.sessionId, `I've updated my preferences: ${preferenceSummary}`);
+      } else {
+        console.error('No active session ID');
       }
-      if (data.session_id) setSessionId(data.session_id);
-    } catch {
-      setMessages((msgs) => [...msgs, { text: "Sorry, there was a problem contacting the assistant.", sender: "assistant" }]);
     }
+    
+    setTimeout(() => setPreferencesSubmitted(false), 3000);
   };
 
-  const handleStartChat = async () => {
-    setMessages([
-      { text: "👋 Hi! I'm your restaurant assistant. How can I help you today?", sender: "assistant" }
-    ]);
-    try {
-      const res = await fetch("/api/chat/chat/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ preferences })
-      });
-      const data = await res.json();
-      if (data.session_id) setSessionId(data.session_id);
-      if (data.message) setMessages(msgs => [...msgs, { text: data.message, sender: "assistant" }]);
-      setChatStarted(true);
-    } catch {
-      setMessages(msgs => [...msgs, { text: "Sorry, could not start a chat session.", sender: "assistant" }]);
+  const generatePreferenceSummary = (prefs: typeof preferences) => {
+    const parts = [];
+    
+    if (prefs.dietaryRestrictions.length > 0) {
+      parts.push(`Dietary: ${prefs.dietaryRestrictions.join(', ')}`);
     }
+    if (prefs.allergies.length > 0) {
+      parts.push(`Allergies: ${prefs.allergies.join(', ')}`);
+    }
+    if (prefs.favoriteCuisines.length > 0) {
+      parts.push(`Favorite cuisines: ${prefs.favoriteCuisines.join(', ')}`);
+    }
+    parts.push(`Price range: $${prefs.priceRange[0]}-$${prefs.priceRange[1]}`);
+    parts.push(`Spice level: ${prefs.spicePreference}/5`);
+    
+    if (prefs.dislikedIngredients.length > 0) {
+      parts.push(`Dislikes: ${prefs.dislikedIngredients.slice(0, 3).join(', ')}${prefs.dislikedIngredients.length > 3 ? '...' : ''}`);
+    }
+    
+    return parts.join('. ');
+  };
+
+  const handleSendMessage = async (message: string) => {
+    if (!session.sessionId) {
+      console.error('No active session ID');
+      return;
+    }
+    
+    await sendMessage(session.sessionId, message);
   };
 
   return (
-    <Box sx={{ display: { md: 'flex' }, gap: 3, alignItems: 'flex-start', mt: 3 }}>
-      {/* Preferences Section */}
-      <Box sx={{ flex: 1, minWidth: 320 }}>
-        <Preferences
-          preferences={preferences}
-          setPreferences={setPreferences}
-          allergiesList={allergiesList}
-          ingredientsList={ingredientsList}
-          cuisinesList={cuisinesList}
-          mealTypesList={mealTypesList}
-          dietaryRestrictionsList={dietaryRestrictionsList}
-        />
-      </Box>
-      {/* Divider for desktop */}
-      <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
-      {/* Menu Section */}
-      <Box sx={{ flex: 2, minWidth: 350 }}>
-        <MenuSection preferences={preferences} />
-        {/* Chat UI below menu */}
-        <Paper sx={{ mt: 3, p: 2 }}>
-          <Typography variant="h6">Chat</Typography>
-          <Box sx={{ maxHeight: 240, overflowY: 'auto', mb: 2 }}>
-            {messages.map((msg, idx) => (
-              <Box key={idx} sx={{ my: 1, textAlign: msg.sender === "user" ? "right" : "left" }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    display: "inline-block",
-                    px: 2,
-                    py: 1,
-                    borderRadius: 2,
-                    bgcolor: msg.sender === "user" ? "primary.light" : "grey.200"
-                  }}
-                >
-                  {msg.text}
-                </Typography>
-              </Box>
-            ))}
-            <div ref={messagesEndRef} />
-          </Box>
-          <form onSubmit={e => { e.preventDefault(); if (chatStarted) sendMessage(e); else handleStartChat(); }} style={{ display: 'flex', gap: 8 }}>
-            <input
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder={chatStarted ? "Type your message..." : "Start chatting..."}
-              style={{ flex: 1, padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
-              disabled={!chatStarted && !!input}
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+      <div className="container mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Servio — Your Digital Maitre d'</h1>
+          <p className="text-gray-600 text-lg">Find your perfect meal, tailored to your taste</p>
+        </div>
+
+        {/* Debug Info - Remove in production */}
+        {import.meta.env.MODE === 'development' && (
+          <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+            <p>Session ID: {session.sessionId || 'None'}</p>
+            <p>Session Started: {session.isStarted ? 'Yes' : 'No'}</p>
+          </div>
+        )}
+
+        {/* Main Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Preferences Panel - Left Side on Desktop */}
+          <div className="lg:col-span-1">
+            <Preferences 
+              preferences={preferences} 
+              onUpdatePreferences={updatePreferences}
+              onSubmitPreferences={handleSubmitPreferences}
+              isSubmitted={preferencesSubmitted}
             />
-            <Button variant="contained" type="submit">
-              {chatStarted ? "Send" : "Start Chat"}
-            </Button>
-          </form>
-        </Paper>
-      </Box>
-    </Box>
+          </div>
+
+          {/* Menu and Chat Section - Right Side on Desktop */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Menu Section */}
+            <MenuSection preferences={preferences} />
+            
+            {/* Chat Interface */}
+            <div className="h-96">
+              <ChatInterface
+                session={session}
+                preferences={preferences}
+                onSendMessage={handleSendMessage}
+                // CRITICAL: Removed onStartChat to prevent duplicate initialization
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
+
+export default Chat;

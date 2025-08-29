@@ -97,6 +97,7 @@ class ConversationManager:
         
         # Update preferences if provided
         if preferences:
+            logger.info(f"Received preferences: {preferences}")
             session["preferences"] = preferences
             await self._update_filtered_meals(session)
         # Add user message to history
@@ -113,26 +114,34 @@ class ConversationManager:
 
         # Detect out-of-place or more info questions
         more_info_phrases = ["more about", "information", "details", "tell me more", "what else", "nutritional", "describe", "explain", "recommend side", "side dish"]
-        if any(phrase in message.lower() for phrase in more_info_phrases):
-            # Use the improved nutritional interpretation
-            if current_meal:
-                # Use the new get_meal_details method for direct, interpreted info
-                details = self.llm_service.get_meal_details(current_meal.name, message)
-                return ChatResponse(
-                    message=details,
-                    session_id=session_id,
-                    suggested_meals=[rec.meal for rec in filtered_meals],
-                    follow_up_questions=["Would you like to order this meal, add a side, or see more options?"],
-                    metadata=None
+        if any(phrase in message.lower() for phrase in more_info_phrases) and current_meal:
+            try:
+                details_prompt = f"""
+                Provide detailed information about this meal: {current_meal.name}
+                Description: {current_meal.description}
+                Price: ${current_meal.price}
+                Cuisine: {current_meal.cuisine_type}
+                Ingredients: {', '.join(current_meal.ingredients)}
+                
+                User asked: {message}
+                
+                Please provide helpful details about this meal in a friendly restaurant assistant tone.
+                """
+                details_response = await self.llm_service.generate_response(
+                    prompt=details_prompt,
+                    use_fallback=True
                 )
-            else:
-                return ChatResponse(
-                    message="No meal details available.",
-                    session_id=session_id,
-                    suggested_meals=[],
-                    follow_up_questions=["Would you like to see more options?"],
-                    metadata=None
-                )
+                details = details_response.get("response", f"Here are the details for {current_meal.name}: {current_meal.description}")
+            except Exception as e:
+                logger.error(f"Error getting meal details: {str(e)}")
+                details = f"Here are the details for {current_meal.name}: {current_meal.description} (${current_meal.price})"
+            return ChatResponse(
+                message=details,
+                session_id=session_id,
+                suggested_meals=[rec.meal for rec in filtered_meals],
+                follow_up_questions=["Would you like to order this meal, add a side, or see more options?"],
+                metadata=None
+            )
 
         # If user asks for more options
         more_options_phrases = ["more options", "see more options", "next", "another", "show me more"]
@@ -176,20 +185,29 @@ class ConversationManager:
             )
 
         # --- OTHERWISE, USE LLM FOR NEXT STEP ---
-        llm_response = await self.llm_service.process_message(
-            message=message,
-            context=session["messages"],
-            preferences=session["preferences"]
-        )
+        logger.info(f"Calling LLM with message: {message}")
+        logger.info(f"Session preferences: {session['preferences']}")
+        logger.info(f"Chat history: {session['messages']}")
+        try:
+            llm_response = await self.llm_service.process_message(
+                message=message,
+                context=session["messages"],
+                preferences=session["preferences"]
+            )
+            logger.info(f"Raw LLM response: {llm_response}")
+        except Exception as llm_error:
+            logger.error(f"LLM service error in process_message: {str(llm_error)}", exc_info=True)
+            raise llm_error
 
         # Get meal recommendations if appropriate
         suggested_meals = None
         if llm_response.get("should_recommend_meals", False):
+            logger.info("LLM indicated to recommend meals.")
             suggested_meals = await self.meal_selector.get_recommendations(
                 preferences=session["preferences"],
                 context=llm_response.get("context", {})
             )
-            logger.info(f"LLM response: {llm_response}") 
+            logger.info(f"Meal recommendations: {suggested_meals}")
         # Check for allergies if meals are suggested
         if suggested_meals:
             suggested_meals = await self.allergy_checker.filter_allergens(
