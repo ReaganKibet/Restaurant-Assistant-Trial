@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  restaurant-assistant-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-builder
+    container_name: restaurant-assistant-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
+    volumes:
+      # Mount source code for hot reloading
+      - ./app:/app/app
+      - ./data:/app/data:ro
+      - ./logs:/app/logs
+      - ./static:/app/static
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    networks:
+      - restaurant-dev-network
+
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: restaurant-frontend-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    networks:
+      - restaurant-dev-network
+
+networks:
+  restaurant-dev-network:
+    driver: bridge

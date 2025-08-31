@@ -1,12 +1,32 @@
 version: "3.9"
 
 services:
-  app:
-    build: .
+  restaurant-assistant:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
     container_name: restaurant-assistant
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
     environment:
       - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+    volumes:
+      # Mount data directory for persistence
+      - ./data:/app/data:ro
+      # Mount logs directory for log persistence
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - restaurant-network
+
+networks:
+  restaurant-network:
+    driver: bridge
