@@ -66,8 +66,8 @@ COPY --from=backend-builder /usr/local/bin /usr/local/bin
 # Copy application code
 COPY app/ ./app/
 COPY data/ ./data/
-COPY static/ ./static/
-COPY logs/ ./logs/
+COPY static* ./static/
+COPY logs* ./logs/
 
 # Copy built frontend from frontend-builder stage
 COPY --from=frontend-builder /frontend/dist ./static/frontend
