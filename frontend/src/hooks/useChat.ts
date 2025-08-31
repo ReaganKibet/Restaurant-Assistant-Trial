@@ -21,21 +21,29 @@ export const useChat = () => {
     isLoading: false
   });
 
+  // Get API URL from environment variable or fallback to Render URL
+  const getApiUrl = () => {
+    return import.meta.env.VITE_API_URL || 'https://botappetite.onrender.com';
+  };
+
   const startChat = useCallback(async (preferences: UserPreferences) => {
     setSession(prev => ({ ...prev, isLoading: true }));
     try {
-      const response = await fetch('/api/chat/start', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/chat/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ preferences: transformPreferencesForBackend(preferences) })
       });
+      
       let sessionId;
       if (response.ok) {
         const data = await response.json();
-        sessionId = data.session_id || data.sessionId || data.message; // prefer session_id
+        sessionId = data.session_id || data.sessionId || data.message;
       } else {
         sessionId = 'demo-session-' + Date.now();
       }
+      
       // Add preferences summary as first message in chat
       const summary = generatePreferenceSummary(preferences);
       setSession(prev => ({
@@ -48,7 +56,7 @@ export const useChat = () => {
             id: Date.now().toString(),
             type: 'assistant',
             content:
-              `👋 Welcome to Servio! I'm here to help you find the perfect meal tailored to your preferences.\n\n` +
+              `Welcome to Servio! I'm here to help you find the perfect meal tailored to your preferences.\n\n` +
               `Here's what you've shared with me:\n` +
               summary.split('. ').map(part => `• ${part}`).join('\n') +
               `\n\nLet me know what you're in the mood for, or ask for a recommendation!`,
@@ -70,7 +78,7 @@ export const useChat = () => {
             id: Date.now().toString(),
             type: 'assistant',
             content:
-              `👋 Welcome to Servio! I'm here to help you find the perfect meal tailored to your preferences.\n\n` +
+              `Welcome to Servio! I'm here to help you find the perfect meal tailored to your preferences.\n\n` +
               `Here's what you've shared with me:\n` +
               summary.split('. ').map(part => `• ${part}`).join('\n') +
               `\n\nLet me know what you're in the mood for, or ask for a recommendation!`,
@@ -98,7 +106,8 @@ export const useChat = () => {
     }));
 
     try {
-      const response = await fetch('/api/chat/message', {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -114,8 +123,8 @@ export const useChat = () => {
         const data = await response.json();
         assistantContent = data.message;
       } else {
-        // Remove default welcome message
-        return;
+        // Fallback for when backend is unavailable
+        assistantContent = "I'm having trouble connecting to our servers right now. Please try again in a moment.";
       }
 
       const assistantMessage: ChatMessage = {
@@ -131,13 +140,21 @@ export const useChat = () => {
         isLoading: false
       }));
     } catch (error) {
-      // Remove default fallback message
+      // Error fallback
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: "I'm having trouble connecting to our servers right now. Please try again in a moment.",
+        timestamp: new Date()
+      };
+
       setSession(prev => ({
         ...prev,
+        messages: [...prev.messages, assistantMessage],
         isLoading: false
       }));
     }
-  }, [session.sessionId]);
+  }, []);
 
   // Helper to generate preferences summary
   function generatePreferenceSummary(prefs: UserPreferences) {
