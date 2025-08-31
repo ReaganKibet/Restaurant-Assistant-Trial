@@ -3,9 +3,7 @@ from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 from pydantic import Field
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+
 
 load_dotenv()  # Loads variables from .env
 
