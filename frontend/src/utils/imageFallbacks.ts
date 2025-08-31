@@ -26,15 +26,15 @@ export const imageFallbacks = {
     'https://images.unsplash.com/photo-1563379091339-03246963d8a9?w=400&h=300&fit=crop'
   ],
   italian: [
-    'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop',
+    'https://plus.unsplash.com/premium_photo-1694850980331-fd0dd7f6617b?w=400&h=300&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxjb2xsZWN0aW9uLXBhZ2V8OXw1UjZaTC1vQ0NpY3x8ZW58MHx8fHx8', 
     'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop'
   ],
   american: [
-    'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop', // burger
-    'https://images.unsplash.com/photo-1550547660-8d8c1f1f1b42?w=400&h=300&fit=crop'
+    'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400&h=300&fit=crop&q=80&auto=format&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop'
   ],
   greek: [
-    'https://images.unsplash.com/photo-1604908176997-431682f63c85?w=400&h=300&fit=crop', // moussaka/platter
+    //'https://media.istockphoto.com/id/1481571699/photo/moussaka.jpg?s=400x300&w=is&k=20&c=yeBG5d5mr-KvcgBjmDBMQrBFMB17oSHPQLBMaM7BFbE=',
     'https://images.unsplash.com/photo-1523986371872-9d3ba2e2a389?w=400&h=300&fit=crop'
   ],
   dessert: [
