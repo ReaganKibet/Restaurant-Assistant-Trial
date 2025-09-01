@@ -73,7 +73,7 @@ const Chat: React.FC = () => {
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Servio — Your Digital Maitre d'</h1>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Servio ,Your Digital Dining Companion</h1>
           <p className="text-gray-600 text-lg">Find your perfect meal, tailored to your taste</p>
         </div>
 
