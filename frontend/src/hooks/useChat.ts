@@ -13,6 +13,13 @@ const transformPreferencesForBackend = (preferences: UserPreferences) => ({
   dislikes: preferences.generalDislikes ? [preferences.generalDislikes] : []
 });
 
+// Helper function to properly join URLs
+const joinURL = (base: string, path: string): string => {
+  const cleanBase = base.replace(/\/+$/, ''); // Remove trailing slashes
+  const cleanPath = path.replace(/^\/+/, ''); // Remove leading slashes
+  return `${cleanBase}/${cleanPath}`;
+};
+
 export const useChat = () => {
   const [session, setSession] = useState<ChatSession>({
     sessionId: null,
@@ -22,15 +29,20 @@ export const useChat = () => {
   });
 
   // Get API URL from environment variable or fallback to Render URL
-  const getApiUrl = () => {
-    return import.meta.env.VITE_API_URL || 'https://botappetite.onrender.com';
+  const getApiUrl = (): string => {
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://botappetite.onrender.com';
+    return baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
   };
 
   const startChat = useCallback(async (preferences: UserPreferences) => {
     setSession(prev => ({ ...prev, isLoading: true }));
     try {
       const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/chat/start`, {
+      const endpoint = joinURL(apiUrl, 'api/chat/start');
+      
+      console.log('Starting chat with URL:', endpoint); // Debug log
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ preferences: transformPreferencesForBackend(preferences) })
@@ -40,8 +52,10 @@ export const useChat = () => {
       if (response.ok) {
         const data = await response.json();
         sessionId = data.session_id || data.sessionId || data.message;
+        console.log('Chat started successfully, session ID:', sessionId);
       } else {
-        sessionId = 'demo-session-' + Date.now();
+        console.error('Failed to start chat, status:', response.status);
+        throw new Error(`Server responded with ${response.status}`);
       }
       
       // Add preferences summary as first message in chat
@@ -65,6 +79,7 @@ export const useChat = () => {
         ]
       }));
     } catch (error) {
+      console.error('Error starting chat:', error);
       console.log('Starting demo session...');
       const sessionId = 'demo-session-' + Date.now();
       const summary = generatePreferenceSummary(preferences);
@@ -81,7 +96,7 @@ export const useChat = () => {
               `Welcome to Servio! I'm here to help you find the perfect meal tailored to your preferences.\n\n` +
               `Here's what you've shared with me:\n` +
               summary.split('. ').map(part => `• ${part}`).join('\n') +
-              `\n\nLet me know what you're in the mood for, or ask for a recommendation!`,
+              `\n\n⚠️ Currently running in demo mode. Backend connection unavailable.`,
             timestamp: new Date()
           }
         ]
@@ -107,7 +122,11 @@ export const useChat = () => {
 
     try {
       const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/chat/message`, {
+      const endpoint = joinURL(apiUrl, 'api/chat/message');
+      
+      console.log('Sending message to URL:', endpoint); // Debug log
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -122,9 +141,10 @@ export const useChat = () => {
       if (response.ok) {
         const data = await response.json();
         assistantContent = data.message;
+        console.log('Message sent successfully');
       } else {
-        // Fallback for when backend is unavailable
-        assistantContent = "I'm having trouble connecting to our servers right now. Please try again in a moment.";
+        console.error('Failed to send message, status:', response.status);
+        throw new Error(`Server responded with ${response.status}`);
       }
 
       const assistantMessage: ChatMessage = {
@@ -140,6 +160,7 @@ export const useChat = () => {
         isLoading: false
       }));
     } catch (error) {
+      console.error('Error sending message:', error);
       // Error fallback
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
