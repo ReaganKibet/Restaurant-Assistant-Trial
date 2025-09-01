@@ -9,13 +9,10 @@ from app.models.schemas import (
     ConversationRequest, StartConversationRequest, 
     ChatResponse, ChatMessage, UserPreferences
 )
-from app.core.conversation_manager import ConversationManager
-from app.services.llm_service import LLMService
-from app.services.menu_service import MenuService
 
-router = APIRouter(tags=["chat"])
+router = APIRouter()
 
-# Import the global services from main.py instead of creating new instances
+# Import global services from main.py - no duplicate creation
 def get_conversation_manager():
     from app.main import conversation_manager
     if conversation_manager is None:
@@ -56,33 +53,39 @@ def log_active_sessions(session_ids):
 @router.post("/start", response_model=ChatResponse)
 async def start_conversation(
     request: StartConversationRequest,
-    conv_manager: ConversationManager = Depends(get_conversation_manager)
+    conv_manager = Depends(get_conversation_manager)
 ):
     """Start a new conversation session"""
     try:
+        logger.info(f"Starting conversation with preferences: {request.preferences}")
         response = await conv_manager.start_conversation(preferences=request.preferences)
         logger.info(f"Started new session: {response.session_id}")
+        
         # Log all active session IDs for debugging
         session_ids = list(conv_manager.sessions.keys())
         logger.debug(f"All active sessions: {session_ids}")
         log_active_sessions(session_ids)
         return response
+        
     except Exception as e:
-        logger.error(f"Start error: {str(e)}", exc_info=True)
+        logger.error(f"Start conversation error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to start conversation: {str(e)}")
 
 @router.post("/message", response_model=ChatResponse)
 async def send_message(
     request: ChatRequest,
-    conv_manager: ConversationManager = Depends(get_conversation_manager)
+    conv_manager = Depends(get_conversation_manager)
 ):
     """Send a message to the assistant"""
     try:
         if not request.session_id:
             raise HTTPException(status_code=400, detail="Session ID is required")
             
+        logger.info(f"Processing message for session: {request.session_id}")
+        
         # Check if session exists
         if request.session_id not in conv_manager.sessions:
+            logger.warning(f"Session {request.session_id} not found in active sessions")
             raise HTTPException(status_code=404, detail=f"Session {request.session_id} not found")
             
         # Log all active session IDs for debugging
@@ -95,7 +98,7 @@ async def send_message(
             session_id=request.session_id,
             preferences=request.preferences
         )
-        logger.info(f"Processed message for session: {request.session_id}")
+        logger.info(f"Successfully processed message for session: {request.session_id}")
         return response
 
     except HTTPException:
@@ -108,13 +111,13 @@ async def send_message(
         logger.error(f"Method not found error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Service method error: {str(e)}")
     except Exception as e:
-        logger.error(f"Message error: {str(e)}", exc_info=True)
+        logger.error(f"Message processing error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to process message: {str(e)}")
     
 @router.get("/history/{session_id}", response_model=List[ChatMessage])
 async def get_chat_history(
     session_id: str,
-    conv_manager: ConversationManager = Depends(get_conversation_manager)
+    conv_manager = Depends(get_conversation_manager)
 ):
     """Get chat history for a session"""
     try:
@@ -123,13 +126,13 @@ async def get_chat_history(
         logger.warning(f"Invalid session ID: {session_id}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"History error: {str(e)}", exc_info=True)
+        logger.error(f"History retrieval error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to retrieve chat history: {str(e)}")
 
 @router.delete("/session/{session_id}")
 async def end_conversation(
     session_id: str,
-    conv_manager: ConversationManager = Depends(get_conversation_manager)
+    conv_manager = Depends(get_conversation_manager)
 ):
     """End a session and clean up resources"""
     try:
@@ -140,14 +143,15 @@ async def end_conversation(
         logger.warning(f"Invalid session ID: {session_id}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"End error: {str(e)}", exc_info=True)
+        logger.error(f"End conversation error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to end conversation: {str(e)}")
 
 @router.post("/", response_model=dict)
 async def chat(
     request: ChatRequest,
-    llm_service: LLMService = Depends(get_llm_service)
+    llm_service = Depends(get_llm_service)
 ):
+    """Direct chat endpoint (fallback)"""
     start_time = time.time()
     
     try:
@@ -173,5 +177,16 @@ async def chat(
 
 @router.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "service": "chat", "providers": ["gemini", "ollama"]}
+    """Health check endpoint for chat routes"""
+    return {
+        "status": "healthy", 
+        "service": "chat", 
+        "providers": ["gemini", "ollama"],
+        "routes": [
+            "/start",
+            "/message", 
+            "/history/{session_id}",
+            "/session/{session_id}",
+            "/"
+        ]
+    }
