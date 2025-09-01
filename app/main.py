@@ -5,6 +5,7 @@ from loguru import logger
 import uvicorn
 from contextlib import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
+from starlette.routing import Route, Mount
 
 from app.api import routes_chat, routes_meals, routes_admin
 from app.core.conversation_manager import ConversationManager
@@ -39,10 +40,14 @@ async def lifespan(app: FastAPI):
 
         logger.info("🎉 Restaurant AI Assistant started successfully!")
         
-        # Test route registration
+        # Test route registration - Fixed to handle different route types
         for route in app.routes:
-            if hasattr(route, 'path'):
+            if isinstance(route, Route):
                 logger.info(f"📍 Registered route: {route.methods} {route.path}")
+            elif isinstance(route, Mount):
+                logger.info(f"📁 Mounted path: {route.path} -> {route.name or 'static'}")
+            else:
+                logger.info(f"📍 Registered route: {type(route).__name__} {route.path}")
                 
     except Exception as e:
         logger.error(f"❌ Failed to start services: {str(e)}", exc_info=True)
