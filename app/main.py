@@ -1,5 +1,3 @@
-# app/main.py
-
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -17,10 +15,10 @@ from typing import Optional, Dict, Any
 import os
 from pathlib import Path
 
-# Services to be initialized on startup
-llm_service: LLMService = None
-menu_service: MenuService = None
-conversation_manager: ConversationManager = None
+# Global services - initialized once in lifespan
+llm_service: Optional[LLMService] = None
+menu_service: Optional[MenuService] = None
+conversation_manager: Optional[ConversationManager] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,6 +26,7 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Starting Restaurant AI Assistant...")
 
     try:
+        # Initialize services
         llm_service = LLMService()
         logger.info(f"✅ LLM Service initialized with model: {llm_service.model}")
 
@@ -39,8 +38,14 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Conversation Manager initialized")
 
         logger.info("🎉 Restaurant AI Assistant started successfully!")
+        
+        # Test route registration
+        for route in app.routes:
+            if hasattr(route, 'path'):
+                logger.info(f"📍 Registered route: {route.methods} {route.path}")
+                
     except Exception as e:
-        logger.error(f"❌ Failed to start services: {str(e)}")
+        logger.error(f"❌ Failed to start services: {str(e)}", exc_info=True)
         raise
 
     yield
@@ -48,7 +53,7 @@ async def lifespan(app: FastAPI):
     logger.info("🛑 Shutting down Restaurant AI Assistant...")
 
 
-# Initialize FastAPI app with lifespan (single instance)
+# Initialize FastAPI app
 app = FastAPI(
     title="Restaurant AI Assistant",
     description="An intelligent restaurant chatbot system that helps customers find the perfect meal",
@@ -56,23 +61,41 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-
-# Configure CORS
+# Configure CORS - Fixed for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://botappetite.netlify.app"],  # In production, replace with specific origins
+    allow_origins=["https://botappetite.netlify.app", "http://localhost:3000", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount static files directory
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Global dependency functions
+def get_conversation_manager():
+    if conversation_manager is None:
+        raise HTTPException(status_code=503, detail="Conversation Manager not initialized")
+    return conversation_manager
 
-# Include routers
+def get_menu_service():
+    if menu_service is None:
+        raise HTTPException(status_code=503, detail="Menu Service not initialized")
+    return menu_service
+
+def get_llm_service():
+    if llm_service is None:
+        raise HTTPException(status_code=503, detail="LLM Service not initialized")
+    return llm_service
+
+# Include routers AFTER defining dependency functions
 app.include_router(routes_chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(routes_meals.router, prefix="/api/meals", tags=["meals"])
 app.include_router(routes_admin.router, prefix="/api/admin", tags=["admin"])
+
+# Mount static files directory
+try:
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+except Exception as e:
+    logger.warning(f"Could not mount static files: {e}")
 
 @app.get("/")
 async def root():
@@ -82,48 +105,45 @@ async def root():
         "status": "healthy",
         "endpoints": {
             "chat": "/api/chat",
-            "meals": "/api/meals",
+            "meals": "/api/meals", 
             "admin": "/api/admin",
             "docs": "/docs"
+        }
+    }
+
+@app.get("/health")
+async def health():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "services": {
+            "llm": llm_service is not None,
+            "menu": menu_service is not None,
+            "conversation": conversation_manager is not None
         }
     }
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     """Global exception handler for HTTP exceptions"""
-    logger.error(f"HTTP error occurred: {exc.detail}")
+    logger.error(f"HTTP error occurred: {exc.detail} - Path: {request.url.path}")
     return JSONResponse(
         status_code=exc.status_code,
-        content={"message": exc.detail}
+        content={"message": exc.detail, "path": str(request.url.path)}
     )
 
-# Dependency functions for routes
-def get_conversation_manager():
-    if conversation_manager is None:
-        raise HTTPException(status_code=503, detail="Service not initialized")
-    return conversation_manager
-
-def get_menu_service():
-    if menu_service is None:
-        raise HTTPException(status_code=503, detail="Service not initialized")
-    return menu_service
-
-def get_llm_service():
-    if llm_service is None:
-        raise HTTPException(status_code=503, detail="Service not initialized")
-    return llm_service
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    logger.info("Starting LLM Chat API")
-
-@app.get("/health", response_model=dict)
-async def health() -> dict:
-    return {"status": "ok"}
-
-
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Global exception handler for all exceptions"""
+    logger.error(f"Unexpected error: {str(exc)} - Path: {request.url.path}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Internal server error", "path": str(request.url.path)}
+    )
 
 if __name__ == "__main__":
+    # Ensure logs directory exists
+    os.makedirs("logs", exist_ok=True)
     logger.add("logs/app.log", rotation="1 day", retention="30 days")
 
     uvicorn.run(
