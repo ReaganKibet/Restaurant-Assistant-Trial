@@ -13,20 +13,26 @@ from app.core.conversation_manager import ConversationManager
 from app.services.llm_service import LLMService
 from app.services.menu_service import MenuService
 
-router = APIRouter(tags=["chat"])  # Use include_router prefix only
+router = APIRouter(tags=["chat"])
 
-# Create a single, shared instance
-llm_service = LLMService()
-menu_service = MenuService()
-conversation_manager = ConversationManager(llm_service, menu_service)
-
-
-# Dependency injection
+# Import the global services from main.py instead of creating new instances
 def get_conversation_manager():
-    return conversation_manager  # <-- GOOD: always the same instance!
+    from app.main import conversation_manager
+    if conversation_manager is None:
+        raise HTTPException(status_code=503, detail="Conversation service not initialized")
+    return conversation_manager
 
 def get_llm_service():
-    return llm_service  # Use the shared instance instead of creating new ones
+    from app.main import llm_service
+    if llm_service is None:
+        raise HTTPException(status_code=503, detail="LLM service not initialized")
+    return llm_service
+
+def get_menu_service():
+    from app.main import menu_service
+    if menu_service is None:
+        raise HTTPException(status_code=503, detail="Menu service not initialized")
+    return menu_service
 
 # Chat Request Schema
 class ChatRequest(BaseModel):
