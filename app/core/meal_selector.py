@@ -67,11 +67,11 @@ class MealSelector:
         item: MenuItem,
         preferences: UserPreferences,
         score: float
-    ) -> List[str]:
+    ) -> str:
         """Generate human-readable reasons for the recommendation"""
         reasons = []
 
-         # High match score
+        # High match score
         if score > 0.8:
             reasons.append("Excellent match for your preferences")
         elif score > 0.6:
@@ -80,15 +80,14 @@ class MealSelector:
         # Cuisine preference
         if preferences.favorite_cuisines:
             for cuisine in preferences.favorite_cuisines:
-                if cuisine.lower() in item.cuisine_type.lower():
-                    reasons.append(f"Matches your preference for {cuisine} cuisine")  
+                if cuisine.lower() in item.cuisine_type.value.lower():
+                    reasons.append(f"Matches your preference for {cuisine} cuisine")
 
-            
         # Price range
         if preferences.price_range:
             min_price, max_price = preferences.price_range
             if min_price <= item.price <= max_price:
-                reasons.append(f"fits your budget of ${min_price}-${max_price}")
+                reasons.append(f"Fits your budget of ${min_price}-${max_price}")
 
         # Dietary restrictions
         if preferences.dietary_restrictions:
@@ -100,67 +99,61 @@ class MealSelector:
                     restriction == "dairy_free" and item.is_dairy_free):
                     matching_restrictions.append(restriction.replace("_", " "))
             if matching_restrictions:
-                reasons.append(f"meets your {', '.join(matching_restrictions)} requirements")
+                reasons.append(f"Meets your {', '.join(matching_restrictions)} requirements")
 
         # Spice level
         if preferences.spice_preference:
             if abs(item.spice_level - preferences.spice_preference) <= 1:
-                reasons.append(f"matches your preferred spice level")
+                reasons.append(f"Matches your preferred spice level")
 
         # Combine reasons
         if reasons:
             return f"This {item.name} is recommended because it {', '.join(reasons)}."
         return f"This {item.name} is a good match for your preferences."
-    
-      # If no specific reasons, add general ones
-        if not reasons:
-            reasons.append("Recommended based on your preferences")
-
-        return reasons[:3]  # Limit to top 3 reasons
 
     async def get_recommendations(
-    self,
-    preferences: UserPreferences,
-    context: Optional[Dict[str, Any]] = None,
-    limit: int = 3
-) -> List[MealRecommendation]:
-    """Get personalized meal recommendations based on user preferences"""
-    try:
-        # Get all menu items
-        all_items = self.menu_service.get_all_menu_items()
+        self,
+        preferences: UserPreferences,
+        context: Optional[Dict[str, Any]] = None,
+        limit: int = 3
+    ) -> List[MealRecommendation]:
+        """Get personalized meal recommendations based on user preferences"""
+        try:
+            # Get all menu items
+            all_items = self.menu_service.get_all_menu_items()
 
-        # Calculate scores for each item
-        scored_items = []
-        for item in all_items:
-            score = self._calculate_preference_score(item, preferences)
-            scored_items.append((item, score))
+            # Calculate scores for each item
+            scored_items = []
+            for item in all_items:
+                score = self._calculate_preference_score(item, preferences)
+                scored_items.append((item, score))
 
-        # Sort by score
-        scored_items.sort(key=lambda x: x[1], reverse=True)
+            # Sort by score
+            scored_items.sort(key=lambda x: x[1], reverse=True)
 
-        # Generate recommendations
-        recommendations = []
-        for idx, (item, score) in enumerate(scored_items[:limit]):
-            # Get alternatives (next best items) - FIXED: Just use MenuItem objects
-            alternatives = []
-            for alt_item, alt_score in scored_items[limit:limit+2]:
-                alternatives.append(alt_item)  # Just append MenuItem, not MealRecommendation
+            # Generate recommendations
+            recommendations = []
+            for idx, (item, score) in enumerate(scored_items[:limit]):
+                # Get alternatives (next best items)
+                alternatives = []
+                for alt_item, alt_score in scored_items[limit:limit+2]:
+                    alternatives.append(alt_item)  # Just append MenuItem, not MealRecommendation
 
-            recommendation = MealRecommendation(
-                meal=item,
-                confidence_score=score,
-                reasoning=self._generate_recommendation_reasons(
-                    item, preferences, score
-                ),
-                alternatives=alternatives  # Now contains MenuItem objects
-            )
-            recommendations.append(recommendation)
+                recommendation = MealRecommendation(
+                    meal=item,
+                    confidence_score=score,
+                    reasoning=self._generate_recommendation_reasons(
+                        item, preferences, score
+                    ),
+                    alternatives=alternatives  # Now contains MenuItem objects
+                )
+                recommendations.append(recommendation)
 
-        return recommendations
+            return recommendations
 
-    except Exception as e:
-        logger.error(f"Error generating meal recommendations: {str(e)}")
-        return []
+        except Exception as e:
+            logger.error(f"Error generating meal recommendations: {str(e)}")
+            return []
 
     async def get_similar_items(
         self,
