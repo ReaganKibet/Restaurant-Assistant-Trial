@@ -119,58 +119,48 @@ class MealSelector:
         return reasons[:3]  # Limit to top 3 reasons
 
     async def get_recommendations(
-        self,
-        preferences: UserPreferences,
-        context: Optional[Dict[str, Any]] = None,
-        limit: int = 3
-    ) -> List[MealRecommendation]:
-        """Get personalized meal recommendations based on user preferences"""
-        try:
-            # Get all menu items
-            all_items = self.menu_service.get_all_menu_items()
+    self,
+    preferences: UserPreferences,
+    context: Optional[Dict[str, Any]] = None,
+    limit: int = 3
+) -> List[MealRecommendation]:
+    """Get personalized meal recommendations based on user preferences"""
+    try:
+        # Get all menu items
+        all_items = self.menu_service.get_all_menu_items()
 
-            # Calculate scores for each item
-            scored_items = []
-            for item in all_items:
-                score = self._calculate_preference_score(item, preferences)
-                scored_items.append((item, score))
+        # Calculate scores for each item
+        scored_items = []
+        for item in all_items:
+            score = self._calculate_preference_score(item, preferences)
+            scored_items.append((item, score))
 
-            # Sort by score
-            scored_items.sort(key=lambda x: x[1], reverse=True)
+        # Sort by score
+        scored_items.sort(key=lambda x: x[1], reverse=True)
 
-            # Generate recommendations
-            recommendations = []
-            for idx, (item, score) in enumerate(scored_items[:limit]):
-                # Get alternatives (next best items)
-                alternatives = []
-                for alt_item, alt_score in scored_items[limit:limit+2]:
-                    alt_reason = self._generate_recommendation_reasons(
-                        alt_item, preferences, alt_score
-                    )
-                    # Create alternatives as MealRecommendation objects
-                    alternative = MealRecommendation(
-                        meal=alt_item,
-                        confidence_score=alt_score,
-                        reasoning=alt_reason,
-                        alternatives=[]  # Alternatives of alternatives can be empty
-                    )
-                    alternatives.append(alternative)
+        # Generate recommendations
+        recommendations = []
+        for idx, (item, score) in enumerate(scored_items[:limit]):
+            # Get alternatives (next best items) - FIXED: Just use MenuItem objects
+            alternatives = []
+            for alt_item, alt_score in scored_items[limit:limit+2]:
+                alternatives.append(alt_item)  # Just append MenuItem, not MealRecommendation
 
-                recommendation = MealRecommendation(
-                    meal=item,
-                    confidence_score=score,
-                    reasoning=self._generate_recommendation_reasons(
-                        item, preferences, score
-                    ),
-                    alternatives=alternatives
-                )
-                recommendations.append(recommendation)
+            recommendation = MealRecommendation(
+                meal=item,
+                confidence_score=score,
+                reasoning=self._generate_recommendation_reasons(
+                    item, preferences, score
+                ),
+                alternatives=alternatives  # Now contains MenuItem objects
+            )
+            recommendations.append(recommendation)
 
-            return recommendations
+        return recommendations
 
-        except Exception as e:
-            logger.error(f"Error generating meal recommendations: {str(e)}")
-            return []
+    except Exception as e:
+        logger.error(f"Error generating meal recommendations: {str(e)}")
+        return []
 
     async def get_similar_items(
         self,
