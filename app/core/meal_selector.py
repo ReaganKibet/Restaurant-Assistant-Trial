@@ -67,11 +67,11 @@ class MealSelector:
         item: MenuItem,
         preferences: UserPreferences,
         score: float
-    ) -> str:
+    ) -> List[str]:
         """Generate human-readable reasons for the recommendation"""
         reasons = []
 
-        # High match score
+         # High match score
         if score > 0.8:
             reasons.append("Excellent match for your preferences")
         elif score > 0.6:
@@ -80,14 +80,15 @@ class MealSelector:
         # Cuisine preference
         if preferences.favorite_cuisines:
             for cuisine in preferences.favorite_cuisines:
-                if cuisine.lower() in item.cuisine_type.value.lower():
-                    reasons.append(f"Matches your preference for {cuisine} cuisine")
+                if cuisine.lower() in item.cuisine_type.lower():
+                    reasons.append(f"Matches your preference for {cuisine} cuisine")  
 
+            
         # Price range
         if preferences.price_range:
             min_price, max_price = preferences.price_range
             if min_price <= item.price <= max_price:
-                reasons.append(f"Fits your budget of ${min_price}-${max_price}")
+                reasons.append(f"fits your budget of ${min_price}-${max_price}")
 
         # Dietary restrictions
         if preferences.dietary_restrictions:
@@ -99,17 +100,23 @@ class MealSelector:
                     restriction == "dairy_free" and item.is_dairy_free):
                     matching_restrictions.append(restriction.replace("_", " "))
             if matching_restrictions:
-                reasons.append(f"Meets your {', '.join(matching_restrictions)} requirements")
+                reasons.append(f"meets your {', '.join(matching_restrictions)} requirements")
 
         # Spice level
         if preferences.spice_preference:
             if abs(item.spice_level - preferences.spice_preference) <= 1:
-                reasons.append(f"Matches your preferred spice level")
+                reasons.append(f"matches your preferred spice level")
 
         # Combine reasons
         if reasons:
             return f"This {item.name} is recommended because it {', '.join(reasons)}."
         return f"This {item.name} is a good match for your preferences."
+    
+      # If no specific reasons, add general ones
+        if not reasons:
+            reasons.append("Recommended based on your preferences")
+
+        return reasons[:3]  # Limit to top 3 reasons
 
     async def get_recommendations(
         self,
@@ -137,7 +144,17 @@ class MealSelector:
                 # Get alternatives (next best items)
                 alternatives = []
                 for alt_item, alt_score in scored_items[limit:limit+2]:
-                    alternatives.append(alt_item)  # Just append MenuItem, not MealRecommendation
+                    alt_reason = self._generate_recommendation_reasons(
+                        alt_item, preferences, alt_score
+                    )
+                    # Create alternatives as MealRecommendation objects
+                    alternative = MealRecommendation(
+                        meal=alt_item,
+                        confidence_score=alt_score,
+                        reasoning=alt_reason,
+                        alternatives=[]  # Alternatives of alternatives can be empty
+                    )
+                    alternatives.append(alternative)
 
                 recommendation = MealRecommendation(
                     meal=item,
@@ -145,7 +162,7 @@ class MealSelector:
                     reasoning=self._generate_recommendation_reasons(
                         item, preferences, score
                     ),
-                    alternatives=alternatives  # Now contains MenuItem objects
+                    alternatives=alternatives
                 )
                 recommendations.append(recommendation)
 
